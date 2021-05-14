@@ -1,0 +1,68 @@
+version: "2"
+services:
+    mysql:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: "main"
+            # You can use whatever password you like
+            MYSQL_PASSWORD: "12345678"
+            # Password for root access
+            MYSQL_ROOT_PASSWORD: "12345678"
+        ports:
+            # <Port exposed> : < MySQL Port running inside container>
+            - "3307:3306"
+        expose:
+            # Opens port 3306 on the container
+            - "3306"
+        command:
+            [
+                "mysqld",
+                "--character-set-server=utf8mb4",
+                "--collation-server=utf8mb4_unicode_ci",
+            ]
+
+    redis:
+        image: "redis:alpine"
+        command: redis-server
+        restart: always
+        ports:
+            - "6379:6379"
+        expose:
+            - "6379"
+        environment:
+            - REDIS_REPLICATION_MODE=master
+
+    celery_worker:
+        build: .
+        depends_on:
+            - redis
+        command: poetry run celery -A app.celery.celery worker -B -E -l info
+        volumes:
+            - ./:/app
+        environment:
+            - ENV_STATE=prod
+            - PROD_SKIP_DB_INIT=true
+
+    celery_flower:
+        image: mher/flower
+        command: flower --broker=redis://redis:6379/0 --port=8888
+        ports:
+            - 8888:8888
+        expose:
+            - "8888"
+
+    api:
+        image: api
+        build: .
+        depends_on:
+            - celery_worker
+        ports:
+            - "8000:8000"
+        expose:
+            - "8000"
+        volumes:
+            - ./:/app
+        restart: always
+        environment:
+            - ENV_STATE=prod

@@ -1,0 +1,43 @@
+version: "2"
+services:
+    mysql:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: "main"
+            # You can use whatever password you like
+            MYSQL_PASSWORD: "12345678"
+            # Password for root access
+            MYSQL_ROOT_PASSWORD: "12345678"
+        expose:
+            # Opens port 3306 on the container
+            - "3306"
+        logging:
+            driver: none
+        command:
+            [
+                "mysqld",
+                "--character-set-server=utf8mb4",
+                "--collation-server=utf8mb4_unicode_ci",
+            ]
+
+    redis:
+        image: "redis:alpine"
+        command: redis-server
+        restart: always
+        logging:
+            driver: none
+        expose:
+        - '6379'
+        environment:
+        - REDIS_REPLICATION_MODE=master
+
+    api:
+        build: .
+        ports:
+        - "8000:8000"
+        command: "poetry run pytest ${TEST:-} -n ${JOBS:-4} --cov=app --cov-report html:coverage tests/"
+        environment:
+        - ENV_STATE=dev
+        volumes:
+        - ./coverage:/app/coverage
