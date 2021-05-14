@@ -26,9 +26,11 @@ class ServerReturn(APIModel):
     hostname: str
     username: str
     password: str
+    init_task_id: UUID
     created: datetime
     status: ServerStatus
 
+
 class ServerReturnExtended(ServerReturn):
-    plots: list[str] # TODO
-    queues: list[str] # TODO
+    plots: list[str]  # TODO
+    queues: list[str]  # TODO

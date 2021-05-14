@@ -11,5 +11,7 @@ from app.db.base_class import Base
 
 class Server(Base):
     hostname = Column(String(200), nullable=False)
-    nickname = Column(String(30), nullable=False)
+    username = Column(String(30), nullable=False)
     password = Column(String(200), nullable=False)
+    init_task_id = Column(GUID, nullable=True)
+    status = Column(String(40), default="pending")

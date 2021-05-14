@@ -1,10 +1,12 @@
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
+import celery
 
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
 from app.utils import auth
+from app.core import tasks
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from sqlalchemy.orm import Session
 from fastapi_utils.cbv import cbv
@@ -15,7 +17,7 @@ router = InferringRouter()
 
 @cbv(router)
 class ServerCBV:
-    user: models.User = Depends(deps.get_current_user)
+    # user: models.User = Depends(deps.get_current_user)
     db: Session = Depends(deps.get_db)
 
     def get_server_by_id(
@@ -35,10 +37,10 @@ class ServerCBV:
     ) -> schemas.Table[schemas.ServerReturn]:
         amount, items = crud.server.get_multi(self.db, filtration=filtration)
 
-        return {
-            "amount": amount,
-            "items": [schemas.ServerReturn.from_orm(item) for item in items],
-        }
+        return schemas.Table[schemas.ServerReturn](
+            amount=amount,
+            items=[schemas.ServerReturn.from_orm(item) for item in items],
+        )
 
     @router.get("/{server_id}/")
     def get_item(
@@ -47,11 +49,17 @@ class ServerCBV:
         return schemas.ServerReturn.from_orm(server)
 
     @router.post("/")
-    def add_item(
-        self,
-        data: schemas.ServerCreate,
-    ) -> schemas.ServerReturn:
-        server = crud.server.create(self.db, obj_in=data)
+    def add_item(self, data: schemas.ServerCreate) -> schemas.ServerReturn:
+        server_id = uuid4()
+        server = crud.server.create(self.db, obj_in=data, commit=False)
+        init_task: celery.AsyncResult = tasks.init_server_connect.delay(server_id)
+        server.init_task_id = init_task.id
+        server.id = server_id
+
+        self.db.add(server)
+        self.db.commit()
+        self.db.refresh(server)
+
         return schemas.ServerReturn.from_orm(server)
 
     @router.put("/{server_id}/")
@@ -68,4 +76,4 @@ class ServerCBV:
         self, server: models.Server = Depends(get_server_by_id)
     ) -> schemas.Msg:
         crud.server.remove_obj(self.db, obj=server)
-        return ""
+        return {"msg": "Deleted"}
