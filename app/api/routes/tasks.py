@@ -13,8 +13,11 @@ router = APIRouter()
 @router.websocket_route("/ws/")
 async def websocket_endpoint(websocket: WebSocket) -> None:
     await websocket.accept()
-    await websocket.send_text(f"Hello World!")
+
     task_id = websocket.query_params["uuid"]
+    task = celery_app.AsyncResult(task_id)
+    await websocket.send_json(task.get())
+
     state = celery_app.events.State()
 
     def callback(event: dict) -> None:

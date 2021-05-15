@@ -4,3 +4,4 @@ from .misc import *
 from .tasks import *
 from .filtration import *
 from .server import *
+from .console import *
