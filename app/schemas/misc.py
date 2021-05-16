@@ -24,3 +24,6 @@ _T = TypeVar("_T")
 class Table(GenericModel, Generic[_T]):
     amount: int
     items: list[_T]
+
+    class Config:
+        orm_mode = True

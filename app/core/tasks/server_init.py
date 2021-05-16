@@ -31,6 +31,40 @@ def init_server_connect(
     with console.ConnectionManager(server, self, console_logger) as connection:
         root_content = connection.command.ls()
         if "plots" in root_content:
-            connection.command.ls(cd="/root/plots")
+            # If there are already some plots on server on startup,
+            # list them and add them to db
+            plot_files = connection.command.ls(cd="/root/plots")
+            plots_plotting = {
+                plot_name.split(".")[0]
+                for plot_name in plot_files
+                if ".plot." in plot_name
+            }
+            plots_finished = {
+                plot_name.split(".")[0]
+                for plot_name in plot_files
+                if plot_name.endswith(".plot")
+            }
+
+            for plot_name in plots_plotting:
+                crud.plot.create(
+                    db,
+                    obj_in=schemas.PlotCreate(
+                        name=plot_name,
+                        created_server_id=server.id,
+                        located_server_id=server.id,
+                        status=schemas.PlotStatus.PLOTTING,
+                    ),
+                )
+
+            for plot_name in plots_finished:
+                crud.plot.create(
+                    db,
+                    obj_in=schemas.PlotCreate(
+                        name=plot_name,
+                        created_server_id=server.id,
+                        located_server_id=server.id,
+                        status=schemas.PlotStatus.PLOTTED,
+                    ),
+                )
 
     return {"info": "done", "console": console_logger.get()}

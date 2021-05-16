@@ -1,5 +1,6 @@
 from typing import Any
 from uuid import UUID, uuid4
+from . import plots
 import celery
 
 from app import crud, models, schemas
@@ -13,20 +14,13 @@ from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 
 router = InferringRouter()
+router.include_router(plots.router, prefix="/{server_id}/plots")
 
 
 @cbv(router)
 class ServerCBV:
     # user: models.User = Depends(deps.get_current_user)
     db: Session = Depends(deps.get_db)
-
-    def get_server_by_id(
-        server_id: UUID, db: Session = Depends(deps.get_db)
-    ) -> models.Server:
-        server = crud.server.get(db, server_id)
-        if server is None:
-            raise HTTPException(404, "Server with such id is not found")
-        return server
 
     @router.get("/")
     def get_table(
@@ -36,15 +30,11 @@ class ServerCBV:
         ),
     ) -> schemas.Table[schemas.ServerReturn]:
         amount, items = crud.server.get_multi(self.db, filtration=filtration)
-
-        return schemas.Table[schemas.ServerReturn](
-            amount=amount,
-            items=[schemas.ServerReturn.from_orm(item) for item in items],
-        )
+        return schemas.Table[schemas.ServerReturn](amount=amount, items=items)
 
     @router.get("/{server_id}/")
     def get_item(
-        self, server: models.Server = Depends(get_server_by_id)
+        self, server: models.Server = Depends(deps.get_server_by_id)
     ) -> schemas.ServerReturn:
         return schemas.ServerReturn.from_orm(server)
 
@@ -66,14 +56,14 @@ class ServerCBV:
     def update_item(
         self,
         data: schemas.ServerUpdate,
-        server: models.Server = Depends(get_server_by_id),
+        server: models.Server = Depends(deps.get_server_by_id),
     ) -> schemas.ServerReturn:
         server = crud.server.update(self.db, db_obj=server, obj_in=data)
         return schemas.ServerReturn.from_orm(server)
 
     @router.delete("/{server_id}/")
     def delete_item(
-        self, server: models.Server = Depends(get_server_by_id)
+        self, server: models.Server = Depends(deps.get_server_by_id)
     ) -> schemas.Msg:
         crud.server.remove_obj(self.db, obj=server)
         return {"msg": "Deleted"}

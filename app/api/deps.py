@@ -83,3 +83,10 @@ def get_filtration_data(_T: Optional[Type[Base]] = None) -> Callable:
         return res
 
     return dependancy
+
+
+def get_server_by_id(server_id: UUID, db: Session = Depends(get_db)) -> models.Server:
+    server = crud.server.get(db, server_id)
+    if server is None:
+        raise HTTPException(404, "Server with such id is not found")
+    return server

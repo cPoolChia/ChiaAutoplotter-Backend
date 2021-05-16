@@ -4,11 +4,13 @@ from enum import Enum
 from datetime import datetime
 from fastapi_utils.api_model import APIModel
 
+from .plot import PlotReturn
+
 
 class ServerStatus(Enum):
-    pending = "pending"
-    connected = "success"
-    failed = "failed"
+    PENDING = "pending"
+    CONNECTED = "success"
+    FAILED = "failed"
 
 
 class ServerCreate(APIModel):
@@ -29,8 +31,3 @@ class ServerReturn(APIModel):
     init_task_id: UUID
     created: datetime
     status: ServerStatus
-
-
-class ServerReturnExtended(ServerReturn):
-    plots: list[str]  # TODO
-    queues: list[str]  # TODO
