@@ -20,15 +20,15 @@ def init_server_connect(
 ) -> Any:
     db = db_factory()
     console_logger = console.ConsoleLogCollector()
-
     server = crud.server.get(db, id=server_id)
+    connection = console.ConnectionManager(server, self, console_logger, db)
 
     if server is None:
         raise RuntimeError(
             f"Can not find a server data with id {server_id} in a database"
         )
 
-    with console.ConnectionManager(server, self, console_logger) as connection:
+    with connection:
         root_content = connection.command.ls()
         # connection.command.chia.plots.create()
         if "plots" in root_content:
@@ -67,5 +67,7 @@ def init_server_connect(
                         status=schemas.PlotStatus.PLOTTED,
                     ),
                 )
+
+    crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
 
     return {"info": "done", "console": console_logger.get()}

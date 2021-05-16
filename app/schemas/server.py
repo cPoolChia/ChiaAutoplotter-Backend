@@ -9,7 +9,7 @@ from .plot import PlotReturn
 
 class ServerStatus(Enum):
     PENDING = "pending"
-    CONNECTED = "success"
+    CONNECTED = "connected"
     FAILED = "failed"
 
 
