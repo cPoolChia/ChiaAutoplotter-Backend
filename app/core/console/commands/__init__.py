@@ -10,5 +10,4 @@ if TYPE_CHECKING:
 
 class CommandList:
     def __init__(self, connection: ConnectionManager) -> None:
-        self.cd = ChangeDirectoryCommand(connection)
-        self.ls = ListCommand(connection)
+        self.ls = ListDirectoryCommand(connection)

@@ -2,13 +2,9 @@ from typing import Any
 from .base import BaseCommand
 
 
-class ChangeDirectoryCommand(BaseCommand):
-    command = "cd"
-
-
-class ListCommand(BaseCommand):
+class ListDirectoryCommand(BaseCommand[set[str]]):
     command = "ls"
 
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> list[str]:
+    def _process_stdout(self, stdout: bytes, stderr: bytes) -> set[str]:
         super()._process_stdout(stdout, stderr)
-        return stdout.decode("utf8").split()
+        return set(stdout.decode("utf8").split())

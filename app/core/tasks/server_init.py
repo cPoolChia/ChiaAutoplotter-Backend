@@ -29,8 +29,8 @@ def init_server_connect(
         )
 
     with console.ConnectionManager(server, self, console_logger) as connection:
-        connection.command.ls()
-        connection.command.cd("/root/plots")
-        connection.command.ls()
+        root_content = connection.command.ls()
+        if "plots" in root_content:
+            connection.command.ls(cd="/root/plots")
 
     return {"info": "done", "console": console_logger.get()}
