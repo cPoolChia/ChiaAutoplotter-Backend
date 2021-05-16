@@ -10,21 +10,24 @@ _T = TypeVar("_T")
 
 
 class BaseCommand(ABC, Generic[_T]):
-    command: str
+    _command: str
 
     def __init__(self, connection: ConnectionManager) -> None:
         self._connection = connection
 
     def __call__(self, *args: str, **kwargs: str) -> _T:
-        stdout, stderr = self._connection.execute(self._create_command(*args, **kwargs))
+        stdout, stderr = self._connection.execute(
+            "; ".join(self._create_command(*args, **kwargs))
+        )
         return self._process_stdout(stdout, stderr)
 
     @classmethod
-    def _create_command(cls, *args: str, **kwargs: str) -> str:
+    def _create_command(cls, *args: str, **kwargs: str) -> list[str]:
         cd: Optional[str] = kwargs.get("cd", None)
-        cd_pre_command = f"cd {cd}; " if cd is not None else ""
-        main_command = f"{cls.command} {' '.join(args)}"
-        return cd_pre_command + main_command
+        main_command = f"{cls._command} {' '.join(args)}"
+        if cd is not None:
+            return [f"cd {cd}", main_command]
+        return [main_command]
 
     @abstractmethod
     def _process_stdout(self, stdout: bytes, stderr: bytes) -> _T:

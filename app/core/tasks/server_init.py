@@ -30,6 +30,7 @@ def init_server_connect(
 
     with console.ConnectionManager(server, self, console_logger) as connection:
         root_content = connection.command.ls()
+        # connection.command.chia.plots.create()
         if "plots" in root_content:
             # If there are already some plots on server on startup,
             # list them and add them to db

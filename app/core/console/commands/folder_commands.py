@@ -3,7 +3,7 @@ from .base import BaseCommand
 
 
 class ListDirectoryCommand(BaseCommand[set[str]]):
-    command = "ls"
+    _command = "ls"
 
     def _process_stdout(self, stdout: bytes, stderr: bytes) -> set[str]:
         super()._process_stdout(stdout, stderr)
