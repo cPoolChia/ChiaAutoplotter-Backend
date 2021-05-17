@@ -1,11 +1,36 @@
-from typing import Optional
-from app.core.console.connection_manager import ConnectionManager
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
 from .base import BaseChiaCommand
 from app.core.config import settings
+
+if TYPE_CHECKING:
+    from app.core.console.connection_manager import ConnectionManager
 
 
 class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
     _command = "chia plots create"
+
+    def __call__(
+        self,
+        *,
+        cd: Optional[str] = None,
+        create_dir: Optional[str] = None,
+        plot_dir: str = "/root/plots",
+        pool_key: str = settings.CHIA_POOL_KEY,
+        farmer_key: str = settings.CHIA_FARMER_KEY,
+        plots_amount: str = "1",
+        **kwargs: str,
+    ) -> None:
+        return super().__call__(
+            cd=cd,
+            create_dir=create_dir,
+            plot_dir=plot_dir,
+            pool_key=pool_key,
+            farmer_key=farmer_key,
+            plots_amount=plots_amount,
+            **kwargs,
+        )
 
     @classmethod
     def _create_command(

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING, Optional, Generic, TypeVar
+from typing import TYPE_CHECKING, Optional, Generic, TypeVar
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
     from ..connection_manager import ConnectionManager
 
 _T = TypeVar("_T")
+
+
+class ConsoleExecutionError(Exception):
+    ...
 
 
 class BaseCommand(ABC, Generic[_T]):
@@ -44,5 +48,5 @@ class BaseCommand(ABC, Generic[_T]):
     @abstractmethod
     def _process_stdout(self, stdout: bytes, stderr: bytes) -> _T:
         if stderr != b"":
-            raise RuntimeError(stderr)
+            raise ConsoleExecutionError(stderr)
         return None  # type: ignore

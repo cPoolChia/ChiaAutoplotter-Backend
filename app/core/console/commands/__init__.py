@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from .base import BaseCommand
-from .folder_commands import *
+from .dir_commands import *
 from .chia import *
 
 if TYPE_CHECKING:
