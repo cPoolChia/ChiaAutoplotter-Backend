@@ -10,6 +10,9 @@ from app.db.base_class import Base
 
 from app.models.plot import Plot
 
+if TYPE_CHECKING:
+    from .plot_queue import PlotQueue
+
 
 class Server(Base):
     hostname = Column(String(200), nullable=False)
@@ -24,3 +27,4 @@ class Server(Base):
     created_plots = relationship(
         "Plot", foreign_keys=[Plot.located_server_id], uselist=True
     )
+    queues = relationship("PlotQueue", uselist=True)

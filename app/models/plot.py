@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 class Plot(Base):
     name = Column(String(200), nullable=False)
+    location = Column(String(200), nullable=False)
     created_server_id = Column(GUID, ForeignKey("server.id"), index=True, nullable=True)
     located_server_id = Column(
         GUID, ForeignKey("server.id"), index=True, nullable=False
@@ -21,11 +22,11 @@ class Plot(Base):
     created_server = relationship(
         "Server",
         foreign_keys=[created_server_id],
-        # back_populates="Server.created_plots",
+        back_populates="created_plots",
     )
     located_server = relationship(
         "Server",
         foreign_keys=[located_server_id],
-        # back_populates="Server.located_plots",
+        back_populates="located_plots",
     )
     status = Column(String(30), nullable=False, default="plotting")

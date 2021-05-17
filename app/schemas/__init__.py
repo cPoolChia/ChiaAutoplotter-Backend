@@ -6,3 +6,4 @@ from .filtration import *
 from .server import *
 from .console import *
 from .plot import *
+from .plot_queue import *

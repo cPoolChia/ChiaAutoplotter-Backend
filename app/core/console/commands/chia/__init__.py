@@ -5,6 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from .base import BaseChiaCommand
 from .plots import ChiaPlotsCommand
 from .install import ChiaInstallCommand
+from .init import ChiaInitCommand
 
 if TYPE_CHECKING:
     from app.core.console.connection_manager import ConnectionManager
@@ -17,6 +18,7 @@ class ChiaCommand(BaseChiaCommand[None]):
         super().__init__(connection)
         self.plots = ChiaPlotsCommand(connection)
         self.install = ChiaInstallCommand(connection)
+        self.init = ChiaInitCommand(connection)
 
     @classmethod
     def _create_command(cls, *, cd: Optional[str] = None, **kwargs: str) -> list[str]:

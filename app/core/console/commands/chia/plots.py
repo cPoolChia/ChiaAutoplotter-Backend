@@ -59,7 +59,7 @@ class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
         return orig_command[:-1] + [f"{orig_command[-1]} {command_params}"]
 
     def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
-        super()._process_stdout(stdout, stderr)
+        return None
 
 
 class ChiaPlotsCommand(BaseChiaCommand[None]):
