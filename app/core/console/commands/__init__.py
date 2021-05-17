@@ -12,4 +12,5 @@ if TYPE_CHECKING:
 class CommandList:
     def __init__(self, connection: ConnectionManager) -> None:
         self.ls = ListDirectoryCommand(connection)
+        self.mkdir = CreateDirectoryCommand(connection)
         self.chia = ChiaCommand(connection)
