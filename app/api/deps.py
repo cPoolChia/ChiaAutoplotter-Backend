@@ -11,10 +11,18 @@ from datetime import datetime, timedelta
 
 from app import crud, models, schemas
 from app.core import security
+from app.core.celery_listener import CeleryEventsListener
 from app.core.config import settings
 from app.db.session import DatabaseSession
+from app.celery import celery as celery_app
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"/login/access-token")
+
+
+def get_events_listener() -> CeleryEventsListener:
+    celery_events_listener = CeleryEventsListener(celery_app)
+    celery_events_listener.start_threaded()
+    return celery_events_listener
 
 
 def get_db() -> Iterator[Session]:
