@@ -28,15 +28,6 @@ def init_server_connect(
         )
 
     with connection:
-        for i in range(1000):
-            self.send_event(
-                "task-update",
-                data={
-                    "info": f"Executed: {i}",
-                    "console": console_logger.get(),
-                },
-            )
-            time.sleep(1)
         root_content = connection.command.ls()
         if "chia-blockchain" not in root_content:
             connection.command.chia.install(cd="/root/")
