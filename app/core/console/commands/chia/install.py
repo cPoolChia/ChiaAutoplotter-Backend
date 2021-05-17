@@ -1,27 +1,23 @@
 from typing import Optional, TypeVar
 from abc import ABC
-from .base import BaseChiaCommand
+from app.core.console.commands.base import BaseCommand
 
 
-class ChiaInstallCommand(BaseChiaCommand[None]):
-    _command = 'echo "done"'
+class ChiaInstallCommand(BaseCommand[None]):
+    _command = "sh install.sh"
 
-    @classmethod
-    def _create_command(cls, *, cd: Optional[str] = None, **kwargs: str) -> list[str]:
-        orig_command = super()._create_command(cd=cd, **kwargs)
-        return (
-            orig_command[:-2]
-            + [
-                "sudo apt-get update",
-                "sudo apt-get upgrade -y",
-                "sudo apt install git -y",
-                "git clone https://github.com/Chia-Network/chia-blockchain.git "
-                "-b latest --recurse-submodules",
-                "cd chia-blockchain",
-                "sh install.sh",
-            ]
-            + orig_command[-2:]
-        )
+    def __call__(self, *, cd: Optional[str], **kwargs: str) -> None:
+        commands = [
+            "sudo apt-get update",
+            "sudo apt-get upgrade -y",
+            "sudo apt install git -y",
+            "git clone https://github.com/Chia-Network/chia-blockchain.git "
+            "-b latest --recurse-submodules",
+        ]
+        for command in commands:
+            super().__call__(command=command)
+
+        return super().__call__(cd="/root/chia-blockchain", **kwargs)
 
     def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
         return None

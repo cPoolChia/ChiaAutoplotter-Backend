@@ -27,10 +27,10 @@ class BaseCommand(ABC, Generic[_T]):
 
     @classmethod
     def _create_command(cls, *, cd: Optional[str] = None, **kwargs: str) -> list[str]:
-        main_command = f"{cls._command}"
+        command = kwargs.get("command", cls._command)
         if cd is not None:
-            return [f"cd {cd}", main_command]
-        return [main_command]
+            return [f"cd {cd}", command]
+        return [command]
 
     @classmethod
     def _generate_params(
