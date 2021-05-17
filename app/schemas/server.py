@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from enum import Enum
@@ -19,8 +20,10 @@ class ServerCreate(APIModel):
     password: str
 
 
-class ServerUpdate(ServerCreate):
-    ...
+class ServerUpdate(APIModel):
+    hostname: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
 
 
 class ServerReturn(APIModel):
