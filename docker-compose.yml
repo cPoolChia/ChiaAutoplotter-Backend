@@ -65,4 +65,4 @@ services:
             - ./:/app
         restart: always
         environment:
-            - ENV_STATE=prod
+            - ENV_STATE=dev
