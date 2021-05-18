@@ -42,14 +42,26 @@ class PlotQueueCBV(BaseAuthCBV):
         self.db.refresh(plot_queue)
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
+    @router.get("/")
+    def get_queue_table(
+        self,
+        filtration: schemas.FilterData[models.PlotQueue] = Depends(
+            deps.get_filtration_data(models.PlotQueue)
+        ),
+    ) -> schemas.Table[schemas.PlotQueueReturn]:
+        amount, items = crud.plot_queue.get_multi(self.db, filtration=filtration)
+        return schemas.Table[schemas.PlotQueueReturn](amount=amount, items=items)
+
     @router.get("/{plot_queue_id}/")
-    def get_queue_data(self, plot_queue: models.PlotQueue) -> schemas.PlotQueueReturn:
+    def get_queue_data(
+        self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
+    ) -> schemas.PlotQueueReturn:
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
     @router.get("/{plot_queue_id}/plots/")
     def get_queue_plots_data(
         self,
-        plot_queue: models.PlotQueue,
+        plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id),
         filtration: schemas.FilterData[models.PlotQueue] = Depends(
             deps.get_filtration_data(models.PlotQueue)
         ),

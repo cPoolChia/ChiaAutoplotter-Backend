@@ -102,7 +102,7 @@ def get_server_by_id(server_id: UUID, db: Session = Depends(get_db)) -> models.S
 
 def get_plot_queue_by_id(
     plot_queue_id: UUID, db: Session = Depends(get_db)
-) -> models.Server:
+) -> models.PlotQueue:
     plot_queue = crud.plot_queue.get(db, plot_queue_id)
     if plot_queue is None:
         raise HTTPException(404, "Plot queue with such id is not found")
