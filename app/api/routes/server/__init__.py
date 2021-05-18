@@ -1,6 +1,6 @@
 from typing import Any
 from uuid import UUID, uuid4
-from . import plots, queues
+from . import plots, plot_queue
 import celery
 
 from app import crud, models, schemas
@@ -16,7 +16,7 @@ from app.api.routes.base import BaseAuthCBV
 
 router = InferringRouter()
 router.include_router(plots.router, prefix="/{server_id}/plots")
-router.include_router(queues.router, prefix="/{server_id}/queues")
+router.include_router(plot_queue.router, prefix="/{server_id}/queues")
 
 
 @cbv(router)
@@ -32,7 +32,7 @@ class ServerCBV(BaseAuthCBV):
         return schemas.Table[schemas.ServerReturn](amount=amount, items=items)
 
     @router.get("/{server_id}/")
-    def get_item(
+    def get_server(
         self, server: models.Server = Depends(deps.get_server_by_id)
     ) -> schemas.ServerReturn:
         return schemas.ServerReturn.from_orm(server)
