@@ -10,7 +10,7 @@ class ListDirectoryCommand(BaseCommand[set[str]]):
         return set(stdout.decode("utf8").split())
 
 
-class CreateDirectoryCommand(BaseCommand[set[str]]):
+class CreateDirectoryCommand(BaseCommand[bool]):
     _command = "mkdir"
 
     @classmethod
@@ -20,5 +20,8 @@ class CreateDirectoryCommand(BaseCommand[set[str]]):
         command = super()._create_command(cd=cd, **kwargs)
         return command[:-1] + [command[-1] + " " + dirname]
 
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> set[str]:
-        return super()._process_stdout(stdout, stderr)
+    def _process_stdout(self, stdout: bytes, stderr: bytes) -> bool:
+        if b"File exists" in stderr:
+            return False
+        super()._process_stdout(stdout, stderr)
+        return True

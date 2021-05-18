@@ -52,16 +52,22 @@ def plot_queue_task(
 
         plots = connection.command.ls(cd=plot_dir)
         for plot_name in plots:
-            crud.plot.create(
-                db,
-                obj_in=schemas.PlotCreate(
-                    name=plot_name,
-                    location=plot_dir,
-                    created_server_id=plot_queue.server.id,
-                    located_server_id=plot_queue.server.id,
-                    status=schemas.PlotStatus.PLOTTED,
-                ),
-            )
+            plot = crud.plot.get_by_name(db, name=plot_name)
+            if plot is None:
+                crud.plot.create(
+                    db,
+                    obj_in=schemas.PlotCreate(
+                        name=plot_name,
+                        location=plot_dir,
+                        created_server_id=plot_queue.server.id,
+                        located_server_id=plot_queue.server.id,
+                        status=schemas.PlotStatus.PLOTTED,
+                    ),
+                )
+            else:
+                crud.plot.update(
+                    db, db_obj=plot, obj_in={"status": schemas.PlotStatus.PLOTTED}
+                )
 
     plot_task: celery.AsyncResult = plot_queue_task.delay(plot_queue_id)
     plot_queue.plot_task_id = plot_task.id

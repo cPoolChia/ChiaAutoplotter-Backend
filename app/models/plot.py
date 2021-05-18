@@ -9,24 +9,18 @@ from fastapi_utils.guid_type import GUID
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
-    from app.models import Server
+    from app.models import Server, PlotQueue
 
 
 class Plot(Base):
-    name = Column(String(200), nullable=False)
+    name = Column(String(200), nullable=False, index=True, unique=True)
     location = Column(String(200), nullable=False)
-    created_server_id = Column(GUID, ForeignKey("server.id"), index=True, nullable=True)
+    created_queue_id = Column(
+        GUID, ForeignKey("plotqueue.id"), index=True, nullable=True
+    )
     located_server_id = Column(
         GUID, ForeignKey("server.id"), index=True, nullable=False
     )
-    created_server = relationship(
-        "Server",
-        foreign_keys=[created_server_id],
-        back_populates="created_plots",
-    )
-    located_server = relationship(
-        "Server",
-        foreign_keys=[located_server_id],
-        back_populates="located_plots",
-    )
+    created_queue = relationship("PlotQueue", foreign_keys=[created_queue_id])
+    located_server = relationship("Server", foreign_keys=[located_server_id])
     status = Column(String(30), nullable=False, default="plotting")

@@ -20,11 +20,3 @@ class Server(Base):
     password = Column(String(200), nullable=False)
     init_task_id = Column(GUID, nullable=True)
     status = Column(String(40), default="pending")
-
-    located_plots = relationship(
-        "Plot", foreign_keys=[Plot.created_server_id], uselist=True
-    )
-    created_plots = relationship(
-        "Plot", foreign_keys=[Plot.located_server_id], uselist=True
-    )
-    queues = relationship("PlotQueue", uselist=True)

@@ -11,37 +11,30 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from sqlalchemy.orm import Session
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
+from app.api.routes.base import BaseAuthCBV
 
 router = InferringRouter()
 
 
 @cbv(router)
-class PlotCBV:
-    # user: models.User = Depends(deps.get_current_user)
-    db: Session = Depends(deps.get_db)
+class PlotCBV(BaseAuthCBV):
+    server: models.Server = Depends(deps.get_server_by_id)
+    filtration: schemas.FilterData[models.Plot] = Depends(
+        deps.get_filtration_data(models.Plot)
+    )
 
     @router.get("/created/")
-    def get_created_table(
-        self,
-        server: models.Server = Depends(deps.get_server_by_id),
-        filtration: schemas.FilterData[models.Plot] = Depends(
-            deps.get_filtration_data(models.Plot)
-        ),
-    ) -> schemas.Table[schemas.PlotReturn]:
+    def get_created_table(self) -> schemas.Table[schemas.PlotReturn]:
         amount, items = crud.plot.get_multi_by_created_server(
-            self.db, server=server, filtration=filtration
+            self.db, server=self.server, filtration=self.filtration
         )
         return schemas.Table[schemas.PlotReturn](amount=amount, items=items)
 
     @router.get("/located/")
     def get_located_table(
         self,
-        server: models.Server = Depends(deps.get_server_by_id),
-        filtration: schemas.FilterData[models.Plot] = Depends(
-            deps.get_filtration_data(models.Plot)
-        ),
     ) -> schemas.Table[schemas.PlotReturn]:
         amount, items = crud.plot.get_multi_by_located_server(
-            self.db, server=server, filtration=filtration
+            self.db, server=self.server, filtration=self.filtration
         )
         return schemas.Table[schemas.PlotReturn](amount=amount, items=items)

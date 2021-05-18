@@ -37,7 +37,3 @@ class PlotReturn(APIModel):
     located_server_id: UUID
     created: datetime
     status: PlotStatus
-
-
-class PlotReturnExtended(PlotReturn):
-    queues: list[PlotQueueReturn] = []

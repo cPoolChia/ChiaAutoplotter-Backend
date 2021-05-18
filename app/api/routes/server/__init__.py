@@ -1,6 +1,6 @@
 from typing import Any
 from uuid import UUID, uuid4
-from . import plots
+from . import plots, queues
 import celery
 
 from app import crud, models, schemas
@@ -12,16 +12,15 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from sqlalchemy.orm import Session
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
+from app.api.routes.base import BaseAuthCBV
 
 router = InferringRouter()
 router.include_router(plots.router, prefix="/{server_id}/plots")
+router.include_router(queues.router, prefix="/{server_id}/queues")
 
 
 @cbv(router)
-class ServerCBV:
-    # user: models.User = Depends(deps.get_current_user)
-    db: Session = Depends(deps.get_db)
-
+class ServerCBV(BaseAuthCBV):
     @router.get("/")
     def get_table(
         self,
