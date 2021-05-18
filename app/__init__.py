@@ -8,8 +8,8 @@ from app.core.config import settings
 from fastapi.logger import logger
 
 app = FastAPI(
-    title="efullmakt.io Rest API",
-    description="An API for efullmakt.io CRM system",
+    title=f"{settings.PROJECT_NAME} Rest API",
+    description=f"An API for {settings.PROJECT_NAME}",
     version="0.2.1",
     openapi_tags=[
         {
@@ -19,6 +19,18 @@ app = FastAPI(
         {
             "name": "User",
             "description": "Operations related to user account.",
+        },
+        {
+            "name": "Plots",
+            "description": "Operations related to plots.",
+        },
+        {
+            "name": "Plot Queue",
+            "description": "Operations related to plot queues.",
+        },
+        {
+            "name": "Server",
+            "description": "Operations related to servers.",
         },
     ],
 )

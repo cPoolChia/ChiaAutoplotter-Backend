@@ -15,8 +15,10 @@ from fastapi_utils.inferring_router import InferringRouter
 from app.api.routes.base import BaseAuthCBV
 
 router = InferringRouter()
-router.include_router(plots.router, prefix="/{server_id}/plots")
-router.include_router(plot_queue.router, prefix="/{server_id}/queues")
+router.include_router(plots.router, prefix="/{server_id}/plots", tags=["Plots"])
+router.include_router(
+    plot_queue.router, prefix="/{server_id}/queues", tags=["Plot Queue"]
+)
 
 
 @cbv(router)
