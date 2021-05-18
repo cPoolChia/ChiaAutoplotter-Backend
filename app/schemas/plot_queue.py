@@ -7,7 +7,7 @@ from enum import Enum
 from fastapi_utils.api_model import APIModel
 
 
-class PlotQueueCreate(BaseModel):
+class PlotQueueCreate(APIModel):
     server_id: UUID
     create_dir: str
     plot_dir: str
@@ -16,7 +16,7 @@ class PlotQueueCreate(BaseModel):
     plots_amount: int
 
 
-class PlotQueueUpdate(BaseModel):
+class PlotQueueUpdate(APIModel):
     create_dir: Optional[str] = None
     plot_dir: Optional[str] = None
     pool_key: Optional[str] = None
