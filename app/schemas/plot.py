@@ -16,7 +16,7 @@ class PlotStatus(Enum):
     HARVESTING = "harvesting"
 
 
-class PlotCreate(BaseModel):
+class PlotCreate(APIModel):
     name: str
     location: str
     created_server_id: Optional[UUID]
@@ -24,7 +24,7 @@ class PlotCreate(BaseModel):
     status: PlotStatus = PlotStatus.PLOTTING
 
 
-class PlotUpdate(BaseModel):
+class PlotUpdate(APIModel):
     located_server_id: Optional[UUID] = None
     status: Optional[PlotStatus] = None
 
