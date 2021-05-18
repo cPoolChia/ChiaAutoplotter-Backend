@@ -75,7 +75,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def create(
         self, db: Session, *, obj_in: CreateSchemaType, commit: bool = True
     ) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
+        obj_in_data = jsonable_encoder(obj_in, by_alias=False)
         db_obj = self.model(**obj_in_data)  # type: ignore
         db.add(db_obj)
         if commit:
@@ -90,11 +90,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, dict[str, Any]]
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
+        obj_data = jsonable_encoder(db_obj, by_alias=False)
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True, by_alias=True)
+            update_data = obj_in.dict(exclude_unset=True, by_alias=False)
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
