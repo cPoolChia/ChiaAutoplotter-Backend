@@ -42,6 +42,15 @@ class PlotQueueCBV(BaseAuthCBV):
         self.db.refresh(plot_queue)
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
+    @router.put("/{plot_queue_id}/")
+    def update_plot_queue(
+        self,
+        data: schemas.PlotQueueUpdate,
+        plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id),
+    ) -> schemas.PlotQueueReturn:
+        plot_queue = crud.plot_queue.update(self.db, db_obj=plot_queue, obj_in=data)
+        return schemas.PlotQueueReturn.from_orm(plot_queue)
+
     @router.get("/")
     def get_queue_table(
         self,
