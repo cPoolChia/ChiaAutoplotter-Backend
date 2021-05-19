@@ -75,6 +75,6 @@ def plot_queue_task(
 
         return {
             "info": "done",
-            "console": connection.console_logger.get(),
+            "console": connection.log_collector.get(),
             "next_task_id": plot_task.id,
         }

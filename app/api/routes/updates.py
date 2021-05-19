@@ -19,9 +19,7 @@ async def websocket_endpoint(
     await websocket.accept()
     connection_id = object_update_listener.connect(websocket)
     await websocket.send_json({"connected": "true"})
-    warnings.warn(
-        f"{object_update_listener}"
-    )
+    warnings.warn(f"{object_update_listener}")
 
     try:
         while True:

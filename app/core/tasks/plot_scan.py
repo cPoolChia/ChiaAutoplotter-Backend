@@ -54,4 +54,4 @@ def scan_plotting(
             (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
         )
 
-        return {"info": "done", "console": connection.console_logger.get()}
+        return {"info": "done", "console": connection.log_collector.get()}

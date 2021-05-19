@@ -29,6 +29,7 @@ def get_events_listener() -> listeners.TaskEventsListener:
 def get_object_update_listener() -> listeners.ObjectUpdateListener:
     listener = listeners.ObjectUpdateListener()
     crud.CRUDBase.set_object_listener(listener)
+    listener.start_threaded()
     return listener
 
 

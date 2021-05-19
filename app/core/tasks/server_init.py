@@ -38,4 +38,4 @@ def init_server_connect(
 
         crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
 
-        return {"info": "done", "console": connection.console_logger.get()}
+        return {"info": "done", "console": connection.log_collector.get()}

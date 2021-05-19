@@ -5,7 +5,7 @@ from types import TracebackType
 from sqlalchemy.orm.session import Session
 
 from app import models, crud
-from app.core import listeners
+from app.api import deps
 from .commands import CommandList
 from .log_collector import ConsoleLogCollector
 import paramiko
@@ -27,7 +27,7 @@ class ConnectionManager:
         self._db = db
         self._on_failed = on_failed
 
-        crud.CRUDBase.set_object_listener(listeners.ObjectUpdateListener())
+        crud.CRUDBase.set_object_listener(deps.get_object_update_listener())
 
     def _callback_failed(self) -> None:
         if self._on_failed is not None:

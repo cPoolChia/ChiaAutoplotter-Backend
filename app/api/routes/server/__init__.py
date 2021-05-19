@@ -1,6 +1,7 @@
 from typing import Any
 from uuid import UUID, uuid4
 from . import plots, plot_queue
+from datetime import datetime, timedelta
 import celery
 
 from app import crud, models, schemas
@@ -42,7 +43,9 @@ class ServerCBV(BaseAuthCBV):
     @router.post("/")
     def add_item(self, data: schemas.ServerCreate) -> schemas.ServerReturn:
         server = crud.server.create(self.db, obj_in=data)
-        init_task: celery.AsyncResult = tasks.init_server_connect.delay(server.id)
+        init_task: celery.AsyncResult = tasks.init_server_connect.apply_async(
+            (server.id,), eta=datetime.now() + timedelta(seconds=5)
+        )
         server = crud.server.update(
             self.db, db_obj=server, obj_in={"init_task_id": init_task.id}
         )
@@ -60,7 +63,9 @@ class ServerCBV(BaseAuthCBV):
 
         server = crud.server.update(self.db, db_obj=server, obj_in=data)
 
-        init_task: celery.AsyncResult = tasks.init_server_connect.delay(server.id)
+        init_task: celery.AsyncResult = tasks.init_server_connect.apply_async(
+            (server.id,), eta=datetime.now() + timedelta(seconds=15)
+        )
         server.init_task_id = init_task.id
 
         server = crud.server.update(

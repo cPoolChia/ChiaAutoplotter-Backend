@@ -31,6 +31,6 @@ class ServerReturn(APIModel):
     hostname: str
     username: str
     password: str
-    init_task_id: UUID
+    init_task_id: Optional[UUID]
     created: datetime
     status: ServerStatus
