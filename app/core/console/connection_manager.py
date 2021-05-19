@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Any, Optional, Type
+from typing import Any, Callable, Optional, Type
 from types import TracebackType
 
 from sqlalchemy.orm.session import Session
 
 from app import models, crud
-from .log_collector import ConsoleLogCollector
+from app.core import listeners
 from .commands import CommandList
+from .log_collector import ConsoleLogCollector
 import paramiko
 import celery
 
@@ -16,13 +17,21 @@ class ConnectionManager:
         self,
         server: models.Server,
         task: celery.AsyncTask,
-        console_logger: ConsoleLogCollector,
         db: Session,
+        *,
+        on_failed: Optional[Callable[[], None]] = None,
     ) -> None:
         self._server = server
-        self._log_collector = console_logger
+        self.log_collector = ConsoleLogCollector()
         self._task = task
         self._db = db
+        self._on_failed = on_failed
+
+        crud.CRUDBase.set_object_listener(listeners.ObjectUpdateListener())
+
+    def _callback_failed(self) -> None:
+        if self._on_failed is not None:
+            self._on_failed()
 
     def __enter__(self) -> ConnectionManager:
         self._ssh_client = paramiko.SSHClient()
@@ -37,6 +46,7 @@ class ConnectionManager:
             crud.server.update(
                 self._db, db_obj=self._server, obj_in={"status": "failed"}
             )
+            self._callback_failed()
             raise
 
         return self
@@ -55,20 +65,19 @@ class ConnectionManager:
                     "error_type": exception_type.__name__,
                 },
             )
-            crud.server.update(
-                self._db, db_obj=self._server, obj_in={"status": "failed"}
-            )
+            self._callback_failed()
         self._ssh_client.close()
+        self._db.close()
 
     def execute(self, command: str) -> tuple[bytes, bytes]:
         stdin, stdout, stderr = self._ssh_client.exec_command(command)
         out_text = stdout.read()
         err_text = stderr.read()
-        self._log_collector.add(out_text, err_text, command)
+        self.log_collector.add(out_text, err_text, command)
 
         self._task.send_event(
             "task-update",
-            data={"info": f"Executed: {command}", "console": self._log_collector.get()},
+            data={"info": f"Executed: {command}", "console": self.log_collector.get()},
         )
 
         return out_text, err_text

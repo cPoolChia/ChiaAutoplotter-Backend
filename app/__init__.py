@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.db.session import DatabaseSession
 from app.db import init_db
 from app.core.config import settings
+from app.core import listeners
+from app.api import deps
+from app import crud
 from fastapi.logger import logger
 
 app = FastAPI(
@@ -44,7 +47,12 @@ app.add_middleware(
 
 app.include_router(api_router)
 
-if not settings.SKIP_DB_INIT:
-    init_db(DatabaseSession())
-else:
-    logger.info("Skipped database init (settings.SKIP_DB_INIT == True)")
+
+@app.on_event("startup")
+def startup_event() -> None:
+    if not settings.SKIP_DB_INIT:
+        session = DatabaseSession()
+        init_db(session)
+        session.close()
+    else:
+        logger.info("Skipped database init (settings.SKIP_DB_INIT == True)")

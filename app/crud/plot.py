@@ -4,7 +4,9 @@ from app.crud.base import CRUDBase
 from sqlalchemy.orm import Session
 
 
-class CRUDPlot(CRUDBase[models.Plot, schemas.PlotCreate, schemas.PlotUpdate]):
+class CRUDPlot(
+    CRUDBase[models.Plot, schemas.PlotCreate, schemas.PlotUpdate, schemas.PlotReturn]
+):
     def get_by_name(self, db: Session, *, name: str) -> Optional[models.Plot]:
         return db.query(self.model).filter(self.model.name == name).first()
 

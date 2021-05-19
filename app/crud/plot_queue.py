@@ -5,7 +5,12 @@ from sqlalchemy.orm import Session
 
 
 class CRUDPlotQueue(
-    CRUDBase[models.PlotQueue, schemas.PlotQueueCreate, schemas.PlotQueueUpdate]
+    CRUDBase[
+        models.PlotQueue,
+        schemas.PlotQueueCreate,
+        schemas.PlotQueueUpdate,
+        schemas.PlotQueueReturn,
+    ]
 ):
     def get_multi_by_server(
         self,

@@ -19,7 +19,6 @@ def scan_plotting(
     db_factory: Callable[[], Session] = lambda: next(deps.get_db()),
 ) -> Any:
     db = db_factory()
-    console_logger = console.ConsoleLogCollector()
     plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
 
     if plot_queue is None:
@@ -27,7 +26,7 @@ def scan_plotting(
             f"Can not find a plot queue with id {plot_queue_id} in a database"
         )
 
-    connection = console.ConnectionManager(plot_queue.server, self, console_logger, db)
+    connection = console.ConnectionManager(plot_queue.server, self, db)
 
     with connection:
         plot_location = f"{plot_queue.plot_dir}/{plot_queue.id}"
@@ -51,8 +50,8 @@ def scan_plotting(
                     ),
                 )
 
-    scan_task: celery.AsyncResult = scan_plotting.apply_async(
-        (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
-    )
+        scan_task: celery.AsyncResult = scan_plotting.apply_async(
+            (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
+        )
 
-    return {"info": "done", "console": console_logger.get()}
+        return {"info": "done", "console": connection.console_logger.get()}

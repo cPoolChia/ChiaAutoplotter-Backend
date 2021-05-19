@@ -18,20 +18,24 @@ def init_server_connect(
     db_factory: Callable[[], Session] = lambda: next(deps.get_db()),
 ) -> Any:
     db = db_factory()
-    console_logger = console.ConsoleLogCollector()
     server = crud.server.get(db, id=server_id)
-    connection = console.ConnectionManager(server, self, console_logger, db)
 
     if server is None:
         raise RuntimeError(
             f"Can not find a server data with id {server_id} in a database"
         )
 
+    def on_failed() -> None:
+        assert server is not None
+        crud.server.update(db, db_obj=server, obj_in={"status": "failed"})
+
+    connection = console.ConnectionManager(server, self, db, on_failed=on_failed)
+
     with connection:
         root_content = connection.command.ls()
         if "chia-blockchain" not in root_content:
             connection.command.chia.install(cd="/root/")
 
-    crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
+        crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
 
-    return {"info": "done", "console": console_logger.get()}
+        return {"info": "done", "console": connection.console_logger.get()}

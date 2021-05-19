@@ -18,7 +18,6 @@ def plot_queue_task(
     db_factory: Callable[[], Session] = lambda: next(deps.get_db()),
 ) -> Any:
     db = db_factory()
-    console_logger = console.ConsoleLogCollector()
     plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
 
     if plot_queue is None:
@@ -26,7 +25,7 @@ def plot_queue_task(
             f"Can not find a plot queue with id {plot_queue_id} in a database"
         )
 
-    connection = console.ConnectionManager(plot_queue.server, self, console_logger, db)
+    connection = console.ConnectionManager(plot_queue.server, self, db)
 
     with connection:
         root_content = connection.command.ls()
@@ -69,16 +68,13 @@ def plot_queue_task(
                     db, db_obj=plot, obj_in={"status": schemas.PlotStatus.PLOTTED}
                 )
 
-    plot_task: celery.AsyncResult = plot_queue_task.delay(plot_queue_id)
-    plot_queue.plot_task_id = plot_task.id
-    plot_queue.id = plot_queue_id
+        plot_task: celery.AsyncResult = plot_queue_task.delay(plot_queue_id)
+        plot_queue = crud.plot_queue.update(
+            db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
+        )
 
-    db.add(plot_queue)
-    db.commit()
-    db.refresh(plot_queue)
-
-    return {
-        "info": "done",
-        "console": console_logger.get(),
-        "next_task_id": plot_task.id,
-    }
+        return {
+            "info": "done",
+            "console": connection.console_logger.get(),
+            "next_task_id": plot_task.id,
+        }
