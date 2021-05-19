@@ -58,10 +58,10 @@ def plot_queue_task(
                     db,
                     obj_in=schemas.PlotCreate(
                         name=plot_name,
-                        location=plot_dir,
-                        created_server_id=plot_queue.server.id,
+                        location=create_dir,
+                        created_queue_id=plot_queue.id,
                         located_server_id=plot_queue.server.id,
-                        status=schemas.PlotStatus.PLOTTED,
+                        status=schemas.PlotStatus.PLOTTING,
                     ),
                 )
             else:

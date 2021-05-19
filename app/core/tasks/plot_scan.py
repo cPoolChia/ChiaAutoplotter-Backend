@@ -45,7 +45,7 @@ def scan_plotting(
                     obj_in=schemas.PlotCreate(
                         name=plot_name,
                         location=plot_location,
-                        created_server_id=plot_queue.server.id,
+                        created_queue_id=plot_queue.id,
                         located_server_id=plot_queue.server.id,
                         status=schemas.PlotStatus.PLOTTING,
                     ),

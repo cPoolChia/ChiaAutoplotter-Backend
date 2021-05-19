@@ -19,7 +19,7 @@ class PlotStatus(Enum):
 class PlotCreate(APIModel):
     name: str
     location: str
-    created_server_id: Optional[UUID]
+    created_queue_id: Optional[UUID]
     located_server_id: UUID
     status: PlotStatus = PlotStatus.PLOTTING
 
@@ -33,7 +33,8 @@ class PlotReturn(APIModel):
     id: UUID
     name: str
     location: str
-    created_server_id: Optional[UUID]
+    created_server_id: None = None
+    created_queue_id: Optional[UUID]
     located_server_id: UUID
     created: datetime
     status: PlotStatus
