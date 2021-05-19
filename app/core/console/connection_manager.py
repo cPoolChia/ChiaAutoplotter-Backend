@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any
+from typing import Any, Optional, Type
+from types import TracebackType
 
 from sqlalchemy.orm.session import Session
 
@@ -40,7 +41,23 @@ class ConnectionManager:
 
         return self
 
-    def __exit__(self, *exc_info: Any) -> None:
+    def __exit__(
+        self,
+        exception_type: Optional[Type[BaseException]],
+        exception_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        if exception_type is not None and exception_value is not None:
+            self._task.send_event(
+                "task-failed",
+                data={
+                    "info": f"Error: {exception_value}",
+                    "error_type": exception_type.__name__,
+                },
+            )
+            crud.server.update(
+                self._db, db_obj=self._server, obj_in={"status": "failed"}
+            )
         self._ssh_client.close()
 
     def execute(self, command: str) -> tuple[bytes, bytes]:

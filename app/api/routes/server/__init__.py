@@ -41,15 +41,11 @@ class ServerCBV(BaseAuthCBV):
 
     @router.post("/")
     def add_item(self, data: schemas.ServerCreate) -> schemas.ServerReturn:
-        server_id = uuid4()
-        server = crud.server.create(self.db, obj_in=data, commit=False)
-        init_task: celery.AsyncResult = tasks.init_server_connect.delay(server_id)
-        server.init_task_id = init_task.id
-        server.id = server_id
-
-        self.db.add(server)
-        self.db.commit()
-        self.db.refresh(server)
+        server = crud.server.create(self.db, obj_in=data)
+        init_task: celery.AsyncResult = tasks.init_server_connect.delay(server.id)
+        server = crud.server.update(
+            self.db, db_obj=server, obj_in={"init_task_id": init_task.id}
+        )
 
         return schemas.ServerReturn.from_orm(server)
 
@@ -59,12 +55,28 @@ class ServerCBV(BaseAuthCBV):
         data: schemas.ServerUpdate,
         server: models.Server = Depends(deps.get_server_by_id),
     ) -> schemas.ServerReturn:
+        if server.status == schemas.ServerStatus.CONNECTED.value:
+            raise HTTPException(403, detail="Can not edit already connected server")
+
         server = crud.server.update(self.db, db_obj=server, obj_in=data)
+
+        init_task: celery.AsyncResult = tasks.init_server_connect.delay(server.id)
+        server.init_task_id = init_task.id
+
+        server = crud.server.update(
+            self.db, db_obj=server, obj_in={"init_task_id": init_task.id}
+        )
+
         return schemas.ServerReturn.from_orm(server)
 
     @router.delete("/{server_id}/")
     def delete_item(
         self, server: models.Server = Depends(deps.get_server_by_id)
     ) -> schemas.Msg:
-        crud.server.remove_obj(self.db, obj=server)
+        try:
+            crud.server.remove_obj(self.db, obj=server)
+        except Exception as error:  # TODO
+            raise HTTPException(
+                403, detail="Server has connected entities, can not remove it"
+            ) from error
         return {"msg": "Deleted"}
