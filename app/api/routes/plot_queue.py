@@ -30,7 +30,9 @@ class PlotQueueCBV(BaseAuthCBV):
             (plot_queue.id,), eta=datetime.now() + timedelta(seconds=15)
         )
 
-        crud.plot_queue.update(self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id})
+        plot_queue = crud.plot_queue.update(
+            self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
+        )
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
     @router.put("/{plot_queue_id}/")
