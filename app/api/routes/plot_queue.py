@@ -23,23 +23,14 @@ class PlotQueueCBV(BaseAuthCBV):
     def create_plot_queue(
         self, data: schemas.PlotQueueCreate
     ) -> schemas.PlotQueueReturn:
-        plot_queue_id = uuid4()
-        plot_queue = crud.plot_queue.create(self.db, obj_in=data, commit=False)
-        plot_queue.id = plot_queue_id
+        plot_queue = crud.plot_queue.create(self.db, obj_in=data)
 
-        self.db.add(plot_queue)
-        self.db.commit()
-        self.db.refresh(plot_queue)
-
-        plot_task = tasks.plot_queue_task.delay(plot_queue_id)
-        plot_queue.plot_task_id = plot_task.id
+        plot_task = tasks.plot_queue_task.delay(plot_queue.id)
         scan_task: celery.AsyncResult = tasks.scan_plotting.apply_async(
-            (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
+            (plot_queue.id,), eta=datetime.now() + timedelta(seconds=15)
         )
 
-        self.db.add(plot_queue)
-        self.db.commit()
-        self.db.refresh(plot_queue)
+        crud.plot_queue.update(self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id})
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
     @router.put("/{plot_queue_id}/")
