@@ -14,10 +14,8 @@ from fastapi_utils.inferring_router import InferringRouter
 
 
 class BaseCBV:
-    # user: models.User = Depends(deps.get_current_user)
     db: Session = Depends(deps.get_db)
 
 
 class BaseAuthCBV(BaseCBV):
-    ...
-    # user: models.User = Depends(deps.get_current_user)
+    user: models.User = Depends(deps.get_current_user)
