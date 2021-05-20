@@ -7,6 +7,7 @@ from uuid import UUID
 import uuid
 import threading
 import asyncio
+import time
 import collections
 
 from .base import BaseListener
@@ -38,8 +39,17 @@ class TaskEventsListener(BaseListener):
     def callback(self, event: dict) -> None:
         self._state.event(event)
         if "uuid" in event:
-            event_data = schemas.TaskData(**event).dict()
+            if "result" not in event:
+                task_data = schemas.TaskData(**event).dict()
+            else:
+                task = self._app.AsyncResult(event["uuid"])
+                task_data = schemas.TaskData(
+                    uuid=event["uuid"],
+                    state=task.state,
+                    timestamp=time.time(),
+                    data=task.info,
+                ).dict()
             for websocket, loop in self._connections[UUID(event["uuid"])].values():
-                loop.create_task(websocket.send_json(event_data))
+                loop.create_task(websocket.send_json(task_data))
             for websocket, loop in self._connections[None].values():
-                loop.create_task(websocket.send_json(event_data))
+                loop.create_task(websocket.send_json(task_data))

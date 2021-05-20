@@ -90,7 +90,7 @@ class ConnectionManager:
     def execute(self, command: str) -> schemas.ConsoleLog:
         with self.log_collector:
             log_data = self.log_collector.update_log(command=command)
-            stdin, stdout, stderr = self._ssh_client.exec_command(command)
+            stdin, stdout, stderr = self._ssh_client.exec_command(command, 1024)
 
             send_event = lambda: self._task.send_event(
                 "task-update",
