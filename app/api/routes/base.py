@@ -18,4 +18,5 @@ class BaseCBV:
 
 
 class BaseAuthCBV(BaseCBV):
-    user: models.User = Depends(deps.get_current_user)
+    # user: models.User = Depends(deps.get_current_user)
+    ...

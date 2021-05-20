@@ -1,3 +1,4 @@
+from app import schemas
 from typing import Optional, TypeVar
 from abc import ABC
 from app.core.console.commands.base import BaseCommand
@@ -18,6 +19,3 @@ class ChiaInstallCommand(BaseCommand[None]):
             super().__call__(command=command)
 
         return super().__call__(cd="/root/chia-blockchain", **kwargs)
-
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
-        return None

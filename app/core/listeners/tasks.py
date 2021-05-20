@@ -38,7 +38,8 @@ class TaskEventsListener(BaseListener):
     def callback(self, event: dict) -> None:
         self._state.event(event)
         if "uuid" in event:
+            event_data = schemas.TaskData(**event).dict()
             for websocket, loop in self._connections[UUID(event["uuid"])].values():
-                loop.create_task(websocket.send_json(schemas.TaskData(**event).dict()))
-        for websocket, loop in self._connections[None].values():
-            loop.create_task(websocket.send_json(schemas.TaskData(**event).dict()))
+                loop.create_task(websocket.send_json(event_data))
+            for websocket, loop in self._connections[None].values():
+                loop.create_task(websocket.send_json(event_data))

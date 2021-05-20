@@ -26,7 +26,14 @@ def scan_plotting(
             f"Can not find a plot queue with id {plot_queue_id} in a database"
         )
 
-    connection = console.ConnectionManager(plot_queue.server, self, db)
+    def on_finished() -> None:
+        scan_plotting.apply_async(
+            (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
+        )
+
+    connection = console.ConnectionManager(
+        plot_queue.server, self, db, on_finished=on_finished
+    )
 
     with connection:
         plot_location = f"{plot_queue.plot_dir}/{plot_queue.id}"
@@ -49,9 +56,5 @@ def scan_plotting(
                         status=schemas.PlotStatus.PLOTTING,
                     ),
                 )
-
-        scan_task: celery.AsyncResult = scan_plotting.apply_async(
-            (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
-        )
 
         return {"info": "done", "console": connection.log_collector.get()}

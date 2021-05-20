@@ -1,15 +1,16 @@
 from __future__ import annotations
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Optional, Type, BinaryIO
 from types import TracebackType
 
 from sqlalchemy.orm.session import Session
 
-from app import models, crud
+from app import models, crud, schemas
 from app.api import deps
 from .commands import CommandList
 from .log_collector import ConsoleLogCollector
 import paramiko
 import celery
+import warnings
 
 
 class ConnectionManager:
@@ -20,18 +21,30 @@ class ConnectionManager:
         db: Session,
         *,
         on_failed: Optional[Callable[[], None]] = None,
+        on_success: Optional[Callable[[], None]] = None,
+        on_finished: Optional[Callable[[], None]] = None,
     ) -> None:
         self._server = server
         self.log_collector = ConsoleLogCollector()
         self._task = task
         self._db = db
         self._on_failed = on_failed
+        self._on_success = on_success
+        self._on_finished = on_finished
 
         crud.CRUDBase.set_object_listener(deps.get_object_update_listener())
 
     def _callback_failed(self) -> None:
         if self._on_failed is not None:
             self._on_failed()
+
+    def _callback_success(self) -> None:
+        if self._on_success is not None:
+            self._on_success()
+
+    def _callback_finished(self) -> None:
+        if self._on_finished is not None:
+            self._on_finished()
 
     def __enter__(self) -> ConnectionManager:
         self._ssh_client = paramiko.SSHClient()
@@ -47,6 +60,7 @@ class ConnectionManager:
                 self._db, db_obj=self._server, obj_in={"status": "failed"}
             )
             self._callback_failed()
+            self._callback_finished()
             raise
 
         return self
@@ -66,21 +80,39 @@ class ConnectionManager:
                 },
             )
             self._callback_failed()
+        else:
+            self._callback_success()
+
+        self._callback_finished()
         self._ssh_client.close()
         self._db.close()
 
-    def execute(self, command: str) -> tuple[bytes, bytes]:
-        stdin, stdout, stderr = self._ssh_client.exec_command(command)
-        out_text = stdout.read()
-        err_text = stderr.read()
-        self.log_collector.add(out_text, err_text, command)
+    def execute(self, command: str) -> schemas.ConsoleLog:
+        with self.log_collector:
+            log_data = self.log_collector.update_log(command=command)
+            stdin, stdout, stderr = self._ssh_client.exec_command(command)
 
-        self._task.send_event(
-            "task-update",
-            data={"info": f"Executed: {command}", "console": self.log_collector.get()},
-        )
+            send_event = lambda: self._task.send_event(
+                "task-update",
+                data={
+                    "info": f"Executed: {command}",
+                    "console": self.log_collector.get(),
+                },
+            )
 
-        return out_text, err_text
+            while not stdout.channel.exit_status_ready():
+                if stdout.channel.recv_ready():
+                    content = stdout.channel.recv(1024)
+                    log_data = self.log_collector.update_log(stdout=content)
+                    self._task.send_event(
+                        "task-update",
+                        data={
+                            "info": f"Executed: {command}",
+                            "console": self.log_collector.get(),
+                        },
+                    )
+
+        return log_data
 
     @property
     def command(self) -> CommandList:

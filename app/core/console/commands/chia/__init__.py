@@ -26,6 +26,3 @@ class ChiaCommand(BaseChiaCommand[None]):
         if cd is not None:
             return [f"cd {cd}", main_command]
         return [main_command]
-
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
-        super()._process_stdout(stdout, stderr)

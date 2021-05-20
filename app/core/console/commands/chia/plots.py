@@ -58,9 +58,6 @@ class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
         )
         return orig_command[:-1] + [f"{orig_command[-1]} {command_params}"]
 
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
-        return None
-
 
 class ChiaPlotsCommand(BaseChiaCommand[None]):
     _command = "chia plots"
@@ -68,6 +65,3 @@ class ChiaPlotsCommand(BaseChiaCommand[None]):
     def __init__(self, connection: ConnectionManager) -> None:
         super().__init__(connection)
         self.create = ChiaPlotsCreateCommand(connection)
-
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
-        super()._process_stdout(stdout, stderr)

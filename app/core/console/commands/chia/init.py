@@ -10,6 +10,3 @@ if TYPE_CHECKING:
 
 class ChiaInitCommand(BaseChiaCommand[None]):
     _command = "chia init"
-
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> None:
-        super()._process_stdout(stdout, stderr)

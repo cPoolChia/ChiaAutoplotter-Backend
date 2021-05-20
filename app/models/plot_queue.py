@@ -25,3 +25,5 @@ class PlotQueue(Base):
     farmer_key = Column(String(255), nullable=False)
 
     plots_amount = Column(Integer, nullable=False)
+
+    status = Column(String(255), nullable=False, default="pending")

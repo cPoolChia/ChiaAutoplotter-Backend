@@ -7,6 +7,13 @@ from enum import Enum
 from fastapi_utils.api_model import APIModel
 
 
+class PlotQueueStatus(Enum):
+    PENDING = "pending"
+    PLOTTING = "plotting"
+    WAITING = "waiting"
+    FAILED = "failed"
+
+
 class PlotQueueCreate(APIModel):
     server_id: UUID
     create_dir: str
@@ -34,3 +41,4 @@ class PlotQueueReturn(APIModel):
     farmer_key: str
     plots_amount: int
     created: datetime
+    status: PlotQueueStatus

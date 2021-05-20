@@ -15,6 +15,10 @@ class TaskData(APIModel):
 
     @validator("result")
     def json_result(cls, v: Any) -> Any:
+        if not isinstance(v, str):
+            return v
+        if isinstance(v, Exception):
+            return {"value": str(v), "error": v.__class__.__name__}
         try:
             return json.loads(v.replace("'", '"').replace("\n", r"\n"))
         except json.JSONDecodeError as e:

@@ -3,7 +3,9 @@ from typing import Any, Callable, TypedDict
 import celery
 import time
 from uuid import UUID
-from app import schemas, crud
+
+from sqlalchemy.sql import schema
+from app import models, schemas, crud
 from app.core import console
 from app.api import deps
 from app.celery import celery as celery_app
@@ -25,7 +27,25 @@ def plot_queue_task(
             f"Can not find a plot queue with id {plot_queue_id} in a database"
         )
 
-    connection = console.ConnectionManager(plot_queue.server, self, db)
+    def on_failed() -> None:
+        assert plot_queue is not None
+        crud.plot_queue.update(
+            db,
+            db_obj=plot_queue,
+            obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
+        )
+
+    def on_success() -> None:
+        assert plot_queue is not None
+        crud.plot_queue.update(
+            db,
+            db_obj=plot_queue,
+            obj_in={"status": schemas.PlotQueueStatus.WAITING.value},
+        )
+
+    connection = console.ConnectionManager(
+        plot_queue.server, self, db, on_failed=on_failed, on_success=on_success
+    )
 
     with connection:
         root_content = connection.command.ls()
@@ -39,6 +59,12 @@ def plot_queue_task(
 
         connection.command.mkdir(cd="/root/", dirname=create_dir)
         connection.command.mkdir(cd="/root/", dirname=plot_dir)
+
+        crud.plot_queue.update(
+            db,
+            db_obj=plot_queue,
+            obj_in={"status": schemas.PlotQueueStatus.PLOTTING.value},
+        )
 
         connection.command.chia.plots.create(
             cd="/root/chia-blockchain",
@@ -65,7 +91,7 @@ def plot_queue_task(
                 )
             else:
                 crud.plot.update(
-                    db, db_obj=plot, obj_in={"status": schemas.PlotStatus.PLOTTED}
+                    db, db_obj=plot, obj_in={"status": schemas.PlotStatus.PLOTTED.value}
                 )
 
         plot_task: celery.AsyncResult = plot_queue_task.delay(plot_queue_id)

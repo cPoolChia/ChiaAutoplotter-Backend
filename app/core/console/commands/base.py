@@ -1,4 +1,5 @@
 from __future__ import annotations
+from app import schemas
 
 from typing import TYPE_CHECKING, Optional, Generic, TypeVar
 from abc import ABC, abstractmethod
@@ -20,10 +21,8 @@ class BaseCommand(ABC, Generic[_T]):
         self._connection = connection
 
     def __call__(self, *, cd: Optional[str] = None, **kwargs: str) -> _T:
-        stdout, stderr = self._connection.execute(
-            "; ".join(self._create_command(cd=cd, **kwargs))
-        )
-        return self._process_stdout(stdout, stderr)
+        log = self._connection.execute("; ".join(self._create_command(cd=cd, **kwargs)))
+        return self._process_stdout(log)
 
     @classmethod
     def _create_command(cls, *, cd: Optional[str] = None, **kwargs: str) -> list[str]:
@@ -45,8 +44,7 @@ class BaseCommand(ABC, Generic[_T]):
             f"{start}{k}{key_separator}{v}" for k, v in kwargs.items()
         )
 
-    @abstractmethod
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> _T:
-        if stderr != b"":
-            raise ConsoleExecutionError(stderr)
+    def _process_stdout(self, log: schemas.ConsoleLog) -> _T:
+        if log.stderr != "":
+            raise ConsoleExecutionError(log)
         return None  # type: ignore

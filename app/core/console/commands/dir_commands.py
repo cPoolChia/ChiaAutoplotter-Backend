@@ -1,3 +1,4 @@
+from app import schemas
 from typing import Any, Optional
 from .base import BaseCommand
 
@@ -5,9 +6,9 @@ from .base import BaseCommand
 class ListDirectoryCommand(BaseCommand[set[str]]):
     _command = "ls"
 
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> set[str]:
-        super()._process_stdout(stdout, stderr)
-        return set(stdout.decode("utf8").split())
+    def _process_stdout(self, log: schemas.ConsoleLog) -> set[str]:
+        super()._process_stdout(log)
+        return set(log.stdout.split())
 
 
 class CreateDirectoryCommand(BaseCommand[bool]):
@@ -20,8 +21,8 @@ class CreateDirectoryCommand(BaseCommand[bool]):
         command = super()._create_command(cd=cd, **kwargs)
         return command[:-1] + [command[-1] + " " + dirname]
 
-    def _process_stdout(self, stdout: bytes, stderr: bytes) -> bool:
-        if b"File exists" in stderr:
+    def _process_stdout(self, log: schemas.ConsoleLog) -> bool:
+        if "File exists" in log.stderr:
             return False
-        super()._process_stdout(stdout, stderr)
+        super()._process_stdout(log)
         return True
