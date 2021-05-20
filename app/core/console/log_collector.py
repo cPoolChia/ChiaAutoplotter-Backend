@@ -15,12 +15,11 @@ class ConsoleLogCollector:
         return
 
     def update_log(
-        self, stdout: bytes = b"", stderr: bytes = b"", command: Optional[str] = None
+        self, stdout: bytes = b"", command: Optional[str] = None
     ) -> schemas.ConsoleLog:
         if command is not None:
             self._data[-1].command = command
         self._data[-1].stdout += stdout.decode("utf-8")
-        self._data[-1].stderr += stderr.decode("utf-8")
         return self._data[-1]
 
     def get(self) -> list[dict[str, Any]]:
