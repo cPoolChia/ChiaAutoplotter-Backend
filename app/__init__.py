@@ -76,7 +76,7 @@ def startup_event() -> None:
                 session,
                 db_obj=plotting_queue,
                 obj_in={
-                    "status": schemas.PlotQueueStatus.PENDING,
+                    "status": schemas.PlotQueueStatus.PENDING.value,
                     "plot_task_id": task.id,
                 },
             )
