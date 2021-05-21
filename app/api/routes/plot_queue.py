@@ -20,8 +20,8 @@ from app.db.session import DatabaseSession
 router = InferringRouter()
 
 
-@repeat_every(seconds=60)
 @router.on_event("startup")
+@repeat_every(seconds=60, raise_exceptions=True)
 def scan_queues_on_servers() -> None:
     tasks.scan_plotting.delay()
 
