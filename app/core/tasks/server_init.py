@@ -32,10 +32,5 @@ def init_server_connect(
     connection = console.ConnectionManager(server, self, db, on_failed=on_failed)
 
     with connection:
-        root_content = connection.command.ls()
-        if "chia-blockchain" not in root_content:
-            connection.command.chia.install(cd="/root/")
-
         crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
-
         return {"info": "done", "console": connection.log_collector.get()}

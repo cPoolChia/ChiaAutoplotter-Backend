@@ -96,6 +96,7 @@ def scan_plotting(
                     in [
                         schemas.PlotStatus.PLOTTED.value,
                         schemas.PlotStatus.PLOTTING.value,
+                        schemas.PlotStatus.PENDING.value,
                     ]
                     and plot.name not in found_plots
                 ):
