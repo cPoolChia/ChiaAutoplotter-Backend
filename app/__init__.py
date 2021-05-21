@@ -1,3 +1,4 @@
+from datetime import timedelta, datetime
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,9 +6,9 @@ from app.api import api_router
 from app.db.session import DatabaseSession
 from app.db import init_db
 from app.core.config import settings
-from app.core import listeners
+from app.core import listeners, tasks
 from app.api import deps
-from app import crud
+from app import crud, schemas
 from fastapi.logger import logger
 
 app = FastAPI(
@@ -50,9 +51,34 @@ app.include_router(api_router)
 
 @app.on_event("startup")
 def startup_event() -> None:
-    if not settings.SKIP_DB_INIT:
-        session = DatabaseSession()
-        init_db(session)
+    session = DatabaseSession()
+    try:
+        if not settings.SKIP_DB_INIT:
+            init_db(session)
+        else:
+            logger.info("Skipped database init (settings.SKIP_DB_INIT == True)")
+
+        for server in crud.server.get_multi(session)[1]:
+            crud.server.update(
+                session,
+                db_obj=server,
+                obj_in={"status": schemas.ServerStatus.PENDING.value},
+            )
+
+        for plotting_queue in crud.plot_queue.get_multi(session)[1]:
+            logger.info(
+                f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
+            )
+            task = tasks.plot_queue_task.apply_async(
+                (plotting_queue.id,), eta=datetime.now() + timedelta(seconds=10)
+            )
+            crud.plot_queue.update(
+                session,
+                db_obj=plotting_queue,
+                obj_in={
+                    "status": schemas.PlotQueueStatus.PENDING,
+                    "plot_task_id": task.id,
+                },
+            )
+    finally:
         session.close()
-    else:
-        logger.info("Skipped database init (settings.SKIP_DB_INIT == True)")

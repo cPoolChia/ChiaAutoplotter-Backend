@@ -14,12 +14,21 @@ from sqlalchemy.orm import Session
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from app.api.routes.base import BaseAuthCBV
+from fastapi_utils.tasks import repeat_every
+from app.db.session import DatabaseSession
 
 router = InferringRouter()
 router.include_router(plots.router, prefix="/{server_id}/plots", tags=["Plots"])
 router.include_router(
     plot_queue.router, prefix="/{server_id}/queues", tags=["Plot Queue"]
 )
+
+
+@repeat_every(seconds=120)
+def scan_servers_connection() -> None:
+    db = DatabaseSession()
+    for server in crud.server.get_multi(db)[1]:
+        tasks.init_server_connect.delay(server.id)
 
 
 @cbv(router)
