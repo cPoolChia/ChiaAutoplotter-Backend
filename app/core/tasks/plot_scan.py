@@ -105,4 +105,4 @@ def scan_plotting(
                         obj_in={"status": schemas.PlotStatus.LOST.value},
                     )
 
-    return {"info": "done", "console": connection.log_collector.get()}
+    return {"info": "done", "console": log_collector.get()}
