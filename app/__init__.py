@@ -66,7 +66,7 @@ def startup_event() -> None:
             )
 
         for plotting_queue in crud.plot_queue.get_multi(session)[1]:
-            logger.info(
+            logger.warning(
                 f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
             )
             task = tasks.plot_queue_task.apply_async(
