@@ -25,7 +25,7 @@ class CRUDBase(
     update_schema: type[UpdateSchemaType]
     return_schema: type[ReturnSchemaType]
 
-    _listener: listeners.ObjectUpdateListener
+    _listener: Optional[listeners.ObjectUpdateListener] = None
 
     def __init__(self) -> None:
         """
@@ -49,7 +49,8 @@ class CRUDBase(
         db_obj: ModelType,
         change_type: Union[Literal["update"], Literal["delete"]],
     ) -> None:
-        self._listener.notify_change(db_obj, self.return_schema, change_type)
+        if self._listener is not None:
+            self._listener.notify_change(db_obj, self.return_schema, change_type)
 
     def length(self, db: Session) -> int:
         return db.query(self.model).count()
