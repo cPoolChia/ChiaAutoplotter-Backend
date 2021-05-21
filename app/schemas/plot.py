@@ -10,6 +10,7 @@ from .plot_queue import PlotQueueReturn
 
 
 class PlotStatus(Enum):
+    PENDING = "pending"
     PLOTTING = "plotting"
     PLOTTED = "plotted"
     TRANSFERRED = "transferred"

@@ -65,6 +65,13 @@ def startup_event() -> None:
                 obj_in={"status": schemas.ServerStatus.PENDING.value},
             )
 
+        for plot in crud.plot.get_multi(session)[1]:
+            crud.plot.update(
+                session,
+                db_obj=plot,
+                obj_in={"status": schemas.PlotStatus.PENDING.value},
+            )
+
         for plotting_queue in crud.plot_queue.get_multi(session)[1]:
             logger.warning(
                 f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
