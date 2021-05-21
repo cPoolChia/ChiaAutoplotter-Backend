@@ -45,6 +45,4 @@ class BaseCommand(ABC, Generic[_T]):
         )
 
     def _process_stdout(self, log: schemas.ConsoleLog) -> _T:
-        if log.stderr != "":
-            raise ConsoleExecutionError(log)
         return None  # type: ignore

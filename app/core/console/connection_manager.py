@@ -19,13 +19,14 @@ class ConnectionManager:
         server: models.Server,
         task: celery.AsyncTask,
         db: Session,
+        log_collector: Optional[ConsoleLogCollector] = None,
         *,
         on_failed: Optional[Callable[[], None]] = None,
         on_success: Optional[Callable[[], None]] = None,
         on_finished: Optional[Callable[[], None]] = None,
     ) -> None:
         self._server = server
-        self.log_collector = ConsoleLogCollector()
+        self.log_collector = log_collector or ConsoleLogCollector()
         self._task = task
         self._db = db
         self._on_failed = on_failed
@@ -49,19 +50,30 @@ class ConnectionManager:
     def __enter__(self) -> ConnectionManager:
         self._ssh_client = paramiko.SSHClient()
         self._ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            self._ssh_client.connect(
-                hostname=self._server.hostname,
-                username=self._server.username,
-                password=self._server.password,
-            )
-        except paramiko.SSHException:
-            crud.server.update(
-                self._db, db_obj=self._server, obj_in={"status": "failed"}
-            )
-            self._callback_failed()
-            self._callback_finished()
-            raise
+        with self.log_collector:
+            try:
+                self.log_collector.update_log(
+                    command=f"ssh {self._server.username}@{self._server.hostname}"
+                )
+                self._ssh_client.connect(
+                    hostname=self._server.hostname,
+                    username=self._server.username,
+                    password=self._server.password,
+                )
+            except paramiko.SSHException as connection_error:
+                crud.server.update(
+                    self._db, db_obj=self._server, obj_in={"status": "failed"}
+                )
+                self.log_collector.update_log(
+                    stdout=(
+                        f"{connection_error.__class__.__name__}: " f"{connection_error}"
+                    ).encode("utf8")
+                )
+                self._callback_failed()
+                self._callback_finished()
+                raise
+            else:
+                self.log_collector.update_log(stdout=b"Connected successfully")
 
         return self
 

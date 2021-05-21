@@ -22,7 +22,7 @@ class CreateDirectoryCommand(BaseCommand[bool]):
         return command[:-1] + [command[-1] + " " + dirname]
 
     def _process_stdout(self, log: schemas.ConsoleLog) -> bool:
-        if "File exists" in log.stderr:
+        if "File exists" in log.stdout:
             return False
         super()._process_stdout(log)
         return True

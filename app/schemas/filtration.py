@@ -49,8 +49,8 @@ _T = TypeVar("_T", Type[Base], None)
 class FilterData(GenericModel, Generic[_T]):
     table: _T = None
     sort: Optional[SortData] = None
-    limit: Optional[int] = 100
-    offset: Optional[int] = 0
+    limit: Optional[int] = None
+    offset: Optional[int] = None
     data: ColumnFiltrationDict = {}
 
     class Config:

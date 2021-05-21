@@ -4,6 +4,7 @@ import celery
 
 from datetime import datetime, timedelta
 from app import crud, models, schemas
+from app.celery import celery as celery_app
 from app.api import deps
 from app.core.config import settings
 from app.utils import auth
@@ -12,9 +13,16 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from sqlalchemy.orm import Session
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
+from fastapi_utils.tasks import repeat_every
 from app.api.routes.base import BaseAuthCBV
+from app.db.session import DatabaseSession
 
 router = InferringRouter()
+
+
+@repeat_every(seconds=60)
+def scan_queues_on_servers() -> None:
+    tasks.scan_plotting.delay()
 
 
 @cbv(router)
@@ -24,12 +32,7 @@ class PlotQueueCBV(BaseAuthCBV):
         self, data: schemas.PlotQueueCreate
     ) -> schemas.PlotQueueReturn:
         plot_queue = crud.plot_queue.create(self.db, obj_in=data)
-
         plot_task = tasks.plot_queue_task.delay(plot_queue.id)
-        scan_task: celery.AsyncResult = tasks.scan_plotting.apply_async(
-            (plot_queue.id,), eta=datetime.now() + timedelta(seconds=15)
-        )
-
         plot_queue = crud.plot_queue.update(
             self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
         )

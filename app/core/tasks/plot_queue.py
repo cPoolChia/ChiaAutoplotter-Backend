@@ -75,25 +75,6 @@ def plot_queue_task(
             plots_amount=plot_queue.plots_amount,
         )
 
-        plots = connection.command.ls(cd=plot_dir)
-        for plot_name in plots:
-            plot = crud.plot.get_by_name(db, name=plot_name)
-            if plot is None:
-                crud.plot.create(
-                    db,
-                    obj_in=schemas.PlotCreate(
-                        name=plot_name,
-                        location=create_dir,
-                        created_queue_id=plot_queue.id,
-                        located_server_id=plot_queue.server.id,
-                        status=schemas.PlotStatus.PLOTTING,
-                    ),
-                )
-            else:
-                crud.plot.update(
-                    db, db_obj=plot, obj_in={"status": schemas.PlotStatus.PLOTTED.value}
-                )
-
         plot_task: celery.AsyncResult = plot_queue_task.delay(plot_queue_id)
         plot_queue = crud.plot_queue.update(
             db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}

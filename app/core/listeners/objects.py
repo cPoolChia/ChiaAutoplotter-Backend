@@ -64,5 +64,4 @@ class ObjectUpdateListener(BaseListener, ConsumerMixin):
                 "obj": schema.from_orm(db_obj),  # type: ignore
             }
         )
-        warnings.warn(f"{content}")
         self.send_as_task(self.connection, content)
