@@ -58,7 +58,7 @@ def plot_queue_task(
         plot_dir = plot_queue.plot_dir + f"/{plot_queue.id}"
 
         connection.command.mkdir(cd="/root/", dirname=create_dir)
-        connection.command.rm(cd=plot_queue.plot_dir, directory=str(plot_queue.id))
+        connection.command.rm(cd=plot_queue.plot_dir, dirname=str(plot_queue.id))
         connection.command.mkdir(cd="/root/", dirname=plot_dir)
 
         crud.plot_queue.update(

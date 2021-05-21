@@ -14,6 +14,11 @@ class ListDirectoryCommand(BaseCommand[set[str]]):
 class CreateDirectoryCommand(BaseCommand[bool]):
     _command = "mkdir"
 
+    def __call__(
+        self, *, cd: Optional[str] = None, dirname: str = "", **kwargs: str
+    ) -> bool:
+        return super().__call__(cd=cd, dirname=dirname, **kwargs)
+
     @classmethod
     def _create_command(
         cls, *, cd: Optional[str] = None, dirname: str = "", **kwargs: str
@@ -30,6 +35,11 @@ class CreateDirectoryCommand(BaseCommand[bool]):
 
 class RemoveDirectoryCommand(BaseCommand[None]):
     _command = "rm -rf"
+
+    def __call__(
+        self, *, cd: Optional[str] = None, dirname: str = "", **kwargs: str
+    ) -> None:
+        return super().__call__(cd=cd, dirname=dirname, **kwargs)
 
     @classmethod
     def _create_command(
