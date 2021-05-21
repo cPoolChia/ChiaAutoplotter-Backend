@@ -62,7 +62,11 @@ def scan_plotting(
 
             # Check queue create directory
             created_location = f"{plot_queue.create_dir}/{plot_queue.id}"
-            created_files = connection.command.ls(cd=created_location)
+            created_files = {
+                plot
+                for plot in connection.command.ls(cd=created_location)
+                if plot.endswith(".plot")
+            }
             for plot_name in created_files:
                 plot = crud.plot.get_by_name(db, name=plot_name)
                 if plot is None:
@@ -81,6 +85,24 @@ def scan_plotting(
                         db,
                         db_obj=plot,
                         obj_in={"status": schemas.PlotStatus.PLOTTED.value},
+                    )
+
+            # If some plots were not found, mark them as lost
+            found_plots = unique_plots | created_files
+            queue_plots = crud.plot.get_multi_by_queue(db, queue=plot_queue)[1]
+            for plot in queue_plots:
+                if (
+                    plot.status
+                    in [
+                        schemas.PlotStatus.PLOTTED.value,
+                        schemas.PlotStatus.PLOTTING.value,
+                    ]
+                    and plot.name not in found_plots
+                ):
+                    crud.plot.update(
+                        db,
+                        db_obj=plot,
+                        obj_in={"status": schemas.PlotStatus.LOST.value},
                     )
 
     return {"info": "done", "console": connection.log_collector.get()}

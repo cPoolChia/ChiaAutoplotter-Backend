@@ -14,6 +14,7 @@ class PlotStatus(Enum):
     PLOTTED = "plotted"
     TRANSFERRED = "transferred"
     HARVESTING = "harvesting"
+    LOST = "lost"
 
 
 class PlotCreate(APIModel):
