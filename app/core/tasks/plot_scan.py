@@ -27,7 +27,7 @@ def scan_plotting(
             task.status == "FAILURE"
             and plot_queue.status != schemas.PlotQueueStatus.FAILED.value
         ):
-            crud.plot_queue.update(
+            plot_queue = crud.plot_queue.update(
                 db,
                 db_obj=plot_queue,
                 obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
