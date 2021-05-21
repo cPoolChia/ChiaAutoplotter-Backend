@@ -25,6 +25,7 @@ router.include_router(
 
 
 @repeat_every(seconds=120)
+@router.on_event("startup")
 def scan_servers_connection() -> None:
     db = DatabaseSession()
     for server in crud.server.get_multi(db)[1]:

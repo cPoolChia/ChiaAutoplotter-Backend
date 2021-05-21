@@ -21,6 +21,7 @@ router = InferringRouter()
 
 
 @repeat_every(seconds=60)
+@router.on_event("startup")
 def scan_queues_on_servers() -> None:
     tasks.scan_plotting.delay()
 
