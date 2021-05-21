@@ -29,7 +29,10 @@ async def websocket_endpoint(
             state=task.state,
             timestamp=time.time(),
             data=task.info,
-        )
+        ),
+        custom_encoder={
+            Exception: lambda e: {"type": e.__class__.__name__, "error": str(e)}
+        },
     )
     await websocket.send_json(task_data)
     if not task.ready():
