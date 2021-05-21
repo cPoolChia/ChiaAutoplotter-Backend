@@ -23,12 +23,14 @@ async def websocket_endpoint(
 ) -> None:
     await websocket.accept()
     task = celery_app.AsyncResult(str(uuid))
-    task_data = schemas.TaskData(
-        uuid=str(uuid),
-        state=task.state,
-        timestamp=time.time(),
-        data=task.info,
-    ).dict()
+    task_data = jsonable_encoder(
+        schemas.TaskData(
+            uuid=str(uuid),
+            state=task.state,
+            timestamp=time.time(),
+            data=task.info,
+        )
+    )
     await websocket.send_json(task_data)
     if not task.ready():
         await websocket.send_json(task_data)
