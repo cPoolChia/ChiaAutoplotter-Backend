@@ -14,3 +14,4 @@ class CommandList:
         self.ls = ListDirectoryCommand(connection)
         self.mkdir = CreateDirectoryCommand(connection)
         self.chia = ChiaCommand(connection)
+        self.rm = RemoveDirectoryCommand(connection)

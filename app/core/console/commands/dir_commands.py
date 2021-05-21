@@ -26,3 +26,14 @@ class CreateDirectoryCommand(BaseCommand[bool]):
             return False
         super()._process_stdout(log)
         return True
+
+
+class RemoveDirectoryCommand(BaseCommand[None]):
+    _command = "rm -rf"
+
+    @classmethod
+    def _create_command(
+        cls, *, cd: Optional[str] = None, dirname: str = "", **kwargs: str
+    ) -> list[str]:
+        command = super()._create_command(cd=cd, **kwargs)
+        return command[:-1] + [command[-1] + " " + dirname]

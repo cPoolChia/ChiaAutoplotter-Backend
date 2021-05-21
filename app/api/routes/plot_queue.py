@@ -38,6 +38,29 @@ class PlotQueueCBV(BaseAuthCBV):
         )
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
+    @router.post("/{plot_queue_id}/restart/")
+    def restart_plot_queue(
+        self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
+    ) -> schemas.PlotQueueReturn:
+        if plot_queue.plot_task_id is None:
+            raise HTTPException(
+                409,
+                detail="For some reason, task has no plot_task_id. "
+                "If this error repeats, it might be a bug.",
+            )
+
+        task_result = celery_app.AsyncResult(str(plot_queue.plot_task_id))
+        if task_result.state != "FAILURE":
+            raise HTTPException(
+                403, detail="Task for this queue is not failed, can not restart."
+            )
+
+        plot_task = tasks.plot_queue_task.delay(plot_queue.id)
+        plot_queue = crud.plot_queue.update(
+            self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
+        )
+        return schemas.PlotQueueReturn.from_orm(plot_queue)
+
     @router.put("/{plot_queue_id}/")
     def update_plot_queue(
         self,
