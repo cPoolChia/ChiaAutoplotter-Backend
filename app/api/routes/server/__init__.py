@@ -29,7 +29,8 @@ router.include_router(
 def scan_servers_connection() -> None:
     db = DatabaseSession()
     for server in crud.server.get_multi(db)[1]:
-        tasks.init_server_connect.delay(server.id)
+        init_task = tasks.init_server_connect.delay(server.id)
+        crud.server.update(db, db_obj=server, obj_in={"init_task_id": init_task.id})
 
 
 @cbv(router)

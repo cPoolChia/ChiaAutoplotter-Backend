@@ -26,4 +26,4 @@ class PlotQueue(Base):
 
     plots_amount = Column(Integer, nullable=False)
 
-    status = Column(String(255), nullable=False, default="pending")
+    status = Column(String(40), nullable=False, default="pending")

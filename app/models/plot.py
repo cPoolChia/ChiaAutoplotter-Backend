@@ -23,4 +23,4 @@ class Plot(Base):
     )
     created_queue = relationship("PlotQueue", foreign_keys=[created_queue_id])
     located_server = relationship("Server", foreign_keys=[located_server_id])
-    status = Column(String(30), nullable=False, default="plotting")
+    status = Column(String(40), nullable=False, default="pending")
