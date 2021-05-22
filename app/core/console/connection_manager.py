@@ -100,18 +100,10 @@ class ConnectionManager:
         self._db.close()
 
     def execute(self, command: str) -> schemas.ConsoleLog:
-        BUFFER_SIZE = 16_384
+        BUFFER_SIZE = -1
         with self.log_collector:
             log_data = self.log_collector.update_log(command=command)
             stdin, stdout, stderr = self._ssh_client.exec_command(command, BUFFER_SIZE)
-
-            send_event = lambda: self._task.send_event(
-                "task-update",
-                data={
-                    "info": f"Executed: {command}",
-                    "console": self.log_collector.get(),
-                },
-            )
 
             while not stdout.channel.exit_status_ready():
                 if stdout.channel.recv_ready():
