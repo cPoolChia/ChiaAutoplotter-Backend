@@ -24,7 +24,7 @@ router = InferringRouter()
 @repeat_every(seconds=60, raise_exceptions=True)
 def scan_queues_on_servers() -> None:
     db = DatabaseSession()
-    for plot_queue in crud.plot_queue.get_multi(db):
+    for plot_queue in crud.plot_queue.get_multi(db)[1]:
         tasks.scan_plotting.delay(plot_queue.id)
     db.close()
 
