@@ -31,6 +31,7 @@ odfpy = "^1.4.1"
 fastapi-utils = "^0.2.1"
 paramiko = "^2.7.2"
 aiomisc = "^14.0.3"
+celery-types = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
