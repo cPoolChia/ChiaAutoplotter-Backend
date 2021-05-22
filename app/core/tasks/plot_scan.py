@@ -10,19 +10,20 @@ from app.core import console
 from app.api import deps
 from app.celery import celery as celery_app
 from sqlalchemy.orm import Session
+from app.db.session import DatabaseSession
 
 
 @celery_app.task(bind=True)
 def scan_plotting(
     self: celery.Task,
     *,
-    db_factory: Callable[[], Session] = lambda: next(deps.get_db()),
+    db_factory: Callable[[], Session] = DatabaseSession,
 ) -> Any:
     db = db_factory()
     log_collector = ConsoleLogCollector()
     for plot_queue in crud.plot_queue.get_multi(db)[1]:
         # Check how queue task is doing, and if it is failed, mark queue as failed
-        task = celery_app.AsyncResult(str(plot_queue.id))
+        task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
         if (
             task.status == "FAILURE"
             and plot_queue.status != schemas.PlotQueueStatus.FAILED.value
