@@ -77,19 +77,16 @@ def startup_event() -> None:
                 schemas.PlotQueueStatus.PAUSED.value,
                 schemas.PlotQueueStatus.FAILED.value,
             ]:
-                logger.warning(
-                    f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
-                )
-                task = tasks.plot_queue_task.apply_async(
-                    (plotting_queue.id,), eta=datetime.now() + timedelta(seconds=10)
-                )
+                # logger.warning(
+                #     f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
+                # )
+                # task = tasks.plot_queue_task.apply_async(
+                #     (plotting_queue.id,), eta=datetime.now() + timedelta(seconds=10)
+                # )
                 crud.plot_queue.update(
                     session,
                     db_obj=plotting_queue,
-                    obj_in={
-                        "status": schemas.PlotQueueStatus.PENDING.value,
-                        "plot_task_id": task.id,
-                    },
+                    obj_in={"status": schemas.PlotQueueStatus.PENDING.value},
                 )
     finally:
         session.close()
