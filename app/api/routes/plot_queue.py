@@ -23,7 +23,10 @@ router = InferringRouter()
 @router.on_event("startup")
 @repeat_every(seconds=60, raise_exceptions=True)
 def scan_queues_on_servers() -> None:
-    tasks.scan_plotting.delay()
+    db = DatabaseSession()
+    for plot_queue in crud.plot_queue.get_multi(db):
+        tasks.scan_plotting.delay(plot_queue.id)
+    db.close()
 
 
 @cbv(router)
@@ -39,6 +42,20 @@ class PlotQueueCBV(BaseAuthCBV):
         )
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
+    @router.post("/{plot_queue_id}/pause/")
+    def pause_plot_queue(
+        self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
+    ) -> schemas.PlotQueueReturn:
+        if plot_queue.plot_task_id is not None:
+            task_result = celery_app.AsyncResult(str(plot_queue.plot_task_id))
+            task_result.revoke(terminate=True)
+        plot_queue = crud.plot_queue.update(
+            self.db,
+            db_obj=plot_queue,
+            obj_in={"status": schemas.PlotQueueStatus.PAUSED.value},
+        )
+        return plot_queue
+
     @router.post("/{plot_queue_id}/restart/")
     def restart_plot_queue(
         self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
@@ -51,7 +68,10 @@ class PlotQueueCBV(BaseAuthCBV):
             )
 
         task_result = celery_app.AsyncResult(str(plot_queue.plot_task_id))
-        if task_result.state != "FAILURE":
+        if (
+            task_result.state != "FAILURE"
+            and plot_queue.status != schemas.PlotQueueStatus.PAUSED.value
+        ):
             raise HTTPException(
                 403, detail="Task for this queue is not failed, can not restart."
             )

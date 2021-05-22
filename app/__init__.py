@@ -73,19 +73,23 @@ def startup_event() -> None:
             )
 
         for plotting_queue in crud.plot_queue.get_multi(session)[1]:
-            logger.warning(
-                f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
-            )
-            task = tasks.plot_queue_task.apply_async(
-                (plotting_queue.id,), eta=datetime.now() + timedelta(seconds=10)
-            )
-            crud.plot_queue.update(
-                session,
-                db_obj=plotting_queue,
-                obj_in={
-                    "status": schemas.PlotQueueStatus.PENDING.value,
-                    "plot_task_id": task.id,
-                },
-            )
+            if plotting_queue.status not in [
+                schemas.PlotQueueStatus.PAUSED.value,
+                schemas.PlotQueueStatus.FAILED.value,
+            ]:
+                logger.warning(
+                    f"[{plotting_queue.server.hostname}] restarting queue {plotting_queue.id}"
+                )
+                task = tasks.plot_queue_task.apply_async(
+                    (plotting_queue.id,), eta=datetime.now() + timedelta(seconds=10)
+                )
+                crud.plot_queue.update(
+                    session,
+                    db_obj=plotting_queue,
+                    obj_in={
+                        "status": schemas.PlotQueueStatus.PENDING.value,
+                        "plot_task_id": task.id,
+                    },
+                )
     finally:
         session.close()

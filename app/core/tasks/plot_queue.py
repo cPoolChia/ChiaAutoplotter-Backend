@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import Any, Callable, TypedDict
 
 import celery
@@ -76,7 +77,9 @@ def plot_queue_task(
             plots_amount=plot_queue.plots_amount,
         )
 
-        plot_task: celery.AsyncResult = plot_queue_task.delay(plot_queue_id)
+        plot_task: celery.AsyncResult = plot_queue_task.apply_async(
+            (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
+        )
         plot_queue = crud.plot_queue.update(
             db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
         )

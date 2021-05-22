@@ -12,6 +12,7 @@ class PlotQueueStatus(Enum):
     PLOTTING = "plotting"
     WAITING = "waiting"
     FAILED = "failed"
+    PAUSED = "paused"
 
 
 class PlotQueueCreate(APIModel):
