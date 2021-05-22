@@ -22,6 +22,10 @@ def scan_plotting(
     db = db_factory()
     log_collector = ConsoleLogCollector()
     for plot_queue in crud.plot_queue.get_multi(db)[1]:
+        connection = console.ConnectionManager(
+            plot_queue.server, self, db, log_collector
+        )
+
         # Check how queue task is doing, and if it is failed, mark queue as failed
         task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
         if (
@@ -33,10 +37,6 @@ def scan_plotting(
                 db_obj=plot_queue,
                 obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
             )
-
-        connection = console.ConnectionManager(
-            plot_queue.server, self, db, log_collector
-        )
 
         with connection:
             # Check queue plot directory
