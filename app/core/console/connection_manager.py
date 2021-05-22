@@ -104,18 +104,17 @@ class ConnectionManager:
         with self.log_collector:
             log_data = self.log_collector.update_log(command=command)
             stdin, stdout, stderr = self._ssh_client.exec_command(command, BUFFER_SIZE)
+            stdout.channel.set_combine_stderr(True)
 
-            while not stdout.channel.exit_status_ready():
-                if stdout.channel.recv_ready():
-                    content = stdout.channel.recv(BUFFER_SIZE)
-                    log_data = self.log_collector.update_log(stdout=content)
-                    self._task.send_event(
-                        "task-update",
-                        data={
-                            "info": f"Executed: {command}",
-                            "console": self.log_collector.get(),
-                        },
-                    )
+            for line in stdout:
+                log_data = self.log_collector.update_log(stdout=(line).encode("utf-8"))
+                self._task.send_event(
+                    "task-update",
+                    data={
+                        "info": f"Executed: {command}",
+                        "console": self.log_collector.get(),
+                    },
+                )
 
         return log_data
 
