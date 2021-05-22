@@ -69,11 +69,12 @@ class PlotQueueCBV(BaseAuthCBV):
 
         task_result = celery_app.AsyncResult(str(plot_queue.plot_task_id))
         if (
-            task_result.state != "FAILURE"
+            task_result.state not in ["FAILURE", "REVOKED"]
             and plot_queue.status != schemas.PlotQueueStatus.PAUSED.value
         ):
             raise HTTPException(
-                403, detail="Task for this queue is not failed, can not restart."
+                403,
+                detail="Task for this queue is not failed nor revoked, can not restart",
             )
 
         plot_task = tasks.plot_queue_task.delay(plot_queue.id)
