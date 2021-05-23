@@ -21,5 +21,7 @@ class Server(Base):
     password = Column(String(200), nullable=False)
     init_task_id = Column(GUID, nullable=True)
     status = Column(String(40), default="pending")
+    pool_key: Column(String(100), nullable=False)
+    farmer_key: Column(String(100), nullable=False)
 
     directories = relationship("Directory", uselist=True)

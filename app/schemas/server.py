@@ -19,6 +19,8 @@ class ServerCreate(APIModel):
     hostname: str
     username: str
     password: str
+    pool_key: str
+    farmer_key: str
 
 
 class ServerUpdate(APIModel):
@@ -26,6 +28,8 @@ class ServerUpdate(APIModel):
     hostname: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
+    pool_key: Optional[str] = None
+    farmer_key: Optional[str] = None
 
 
 class ServerReturn(APIModel):
@@ -34,6 +38,8 @@ class ServerReturn(APIModel):
     hostname: str
     username: str
     password: str
+    pool_key: str
+    farmer_key: str
     init_task_id: Optional[UUID]
     created: datetime
     status: ServerStatus

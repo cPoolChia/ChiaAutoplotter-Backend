@@ -72,8 +72,8 @@ def plot_queue_task(
             cd="/root/chia-blockchain",
             create_dir=create_dir,
             plot_dir=plot_dir,
-            pool_key=plot_queue.pool_key,
-            farmer_key=plot_queue.farmer_key,
+            pool_key=plot_queue.server.pool_key,
+            farmer_key=plot_queue.server.farmer_key,
             plots_amount=plot_queue.plots_amount,
         )
 
