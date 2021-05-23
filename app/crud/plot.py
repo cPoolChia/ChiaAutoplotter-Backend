@@ -17,7 +17,11 @@ class CRUDPlot(
         server: models.Server,
         filtration: schemas.FilterData[Any] = schemas.FilterData[Any]()
     ) -> tuple[int, list[models.Plot]]:
-        query = db.query(self.model).filter(self.model.located_server == server)
+        query = (
+            db.query(self.model)
+            .join(models.Directory)
+            .filter(models.Directory.server == server)
+        )
         return self._filter_multi_query(query, filtration)
 
     def get_multi_by_created_server(
@@ -32,6 +36,16 @@ class CRUDPlot(
             .join(models.PlotQueue)
             .filter(models.PlotQueue.server == server)
         )
+        return self._filter_multi_query(query, filtration)
+
+    def get_multi_by_directory(
+        self,
+        db: Session,
+        *,
+        directory: models.Directory,
+        filtration: schemas.FilterData[Any] = schemas.FilterData[Any]()
+    ) -> tuple[int, list[models.Plot]]:
+        query = db.query(self.model).filter(self.model.located_directory == directory)
         return self._filter_multi_query(query, filtration)
 
     def get_multi_by_queue(

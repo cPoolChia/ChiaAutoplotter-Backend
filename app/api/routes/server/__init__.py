@@ -1,6 +1,6 @@
 from typing import Any
 from uuid import UUID, uuid4
-from . import plots, plot_queue
+from . import plots, plot_queue, directory
 from datetime import datetime, timedelta
 import celery
 
@@ -21,6 +21,9 @@ router = InferringRouter()
 router.include_router(plots.router, prefix="/{server_id}/plots", tags=["Plots"])
 router.include_router(
     plot_queue.router, prefix="/{server_id}/queues", tags=["Plot Queue"]
+)
+router.include_router(
+    directory.router, prefix="/{server_id}/directory", tags=["Server Directory"]
 )
 
 

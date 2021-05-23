@@ -7,3 +7,4 @@ from .server import *
 from .console import *
 from .plot import *
 from .plot_queue import *
+from .directory import *

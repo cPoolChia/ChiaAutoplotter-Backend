@@ -9,7 +9,7 @@ from fastapi_utils.guid_type import GUID
 from app.db.base_class import Base
 
 if TYPE_CHECKING:
-    from app.models import Server
+    from app.models import Server, Directory
 
 
 class PlotQueue(Base):
@@ -18,8 +18,10 @@ class PlotQueue(Base):
 
     server = relationship("Server", foreign_keys=[server_id])
 
-    create_dir = Column(String(255), nullable=False)
-    plot_dir = Column(String(255), nullable=False)
+    final_dir_id = Column(GUID, ForeignKey("directory.id"), nullable=False)
+    temp_dir_id = Column(GUID, ForeignKey("directory.id"), nullable=False)
+    final_dir = relationship("Directory", foreign_keys=[final_dir_id])
+    temp_dir = relationship("Directory", foreign_keys=[temp_dir_id])
 
     pool_key = Column(String(255), nullable=False)
     farmer_key = Column(String(255), nullable=False)

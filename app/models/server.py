@@ -11,12 +11,15 @@ from app.db.base_class import Base
 from app.models.plot import Plot
 
 if TYPE_CHECKING:
-    from .plot_queue import PlotQueue
+    from .plot_queue import PlotQueue, Directory
 
 
 class Server(Base):
+    name = Column(String(200), nullable=False, index=True, unique=True)
     hostname = Column(String(200), nullable=False)
     username = Column(String(30), nullable=False)
     password = Column(String(200), nullable=False)
     init_task_id = Column(GUID, nullable=True)
     status = Column(String(40), default="pending")
+
+    directories = relationship("Directory", uselist=True)

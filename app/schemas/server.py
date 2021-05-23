@@ -15,12 +15,14 @@ class ServerStatus(Enum):
 
 
 class ServerCreate(APIModel):
+    name: str
     hostname: str
     username: str
     password: str
 
 
 class ServerUpdate(APIModel):
+    name: Optional[str] = None
     hostname: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
@@ -28,6 +30,7 @@ class ServerUpdate(APIModel):
 
 class ServerReturn(APIModel):
     id: UUID
+    name: str
     hostname: str
     username: str
     password: str

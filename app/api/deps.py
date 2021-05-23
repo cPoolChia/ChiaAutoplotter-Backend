@@ -117,3 +117,12 @@ def get_plot_queue_by_id(
     if plot_queue is None:
         raise HTTPException(404, "Plot queue with such id is not found")
     return plot_queue
+
+
+def get_directory_by_id(
+    directory_id: UUID, db: Session = Depends(get_db)
+) -> models.Directory:
+    directory = crud.directory.get(db, directory_id)
+    if directory is None:
+        raise HTTPException(404, "Directory with such id is not found")
+    return directory

@@ -35,6 +35,34 @@ class PlotQueueCBV(BaseAuthCBV):
     def create_plot_queue(
         self, data: schemas.PlotQueueCreate
     ) -> schemas.PlotQueueReturn:
+        server = crud.server.get(self.db, id=data.server_id)
+
+        if server is None:
+            raise HTTPException(404, detail="Server with such id is not found")
+
+        temp_dir = crud.directory.get(self.db, id=data.temp_dir_id)
+        final_dir = crud.directory.get(self.db, id=data.final_dir_id)
+        if temp_dir is None:
+            raise HTTPException(
+                404, detail="Directory with such id is not found (Temporary directory)"
+            )
+        if final_dir is None:
+            raise HTTPException(
+                404, detail="Directory with such id is not found (Final directory)"
+            )
+        if temp_dir.server != server:
+            raise HTTPException(
+                403,
+                detail="Directory's server id is different from serverId "
+                "(Temporary directory)",
+            )
+        if final_dir.server != server:
+            raise HTTPException(
+                403,
+                detail="Directory's server id is different from serverId "
+                "(Final directory)",
+            )
+
         plot_queue = crud.plot_queue.create(self.db, obj_in=data)
         plot_task = tasks.plot_queue_task.delay(plot_queue.id)
         plot_queue = crud.plot_queue.update(

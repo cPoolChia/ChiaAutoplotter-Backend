@@ -17,18 +17,14 @@ class PlotQueueStatus(Enum):
 
 class PlotQueueCreate(APIModel):
     server_id: UUID
-    create_dir: str
-    plot_dir: str
-    pool_key: str
-    farmer_key: str
+    temp_dir_id: UUID
+    final_dir_id: UUID
     plots_amount: int
 
 
 class PlotQueueUpdate(APIModel):
-    create_dir: Optional[str] = None
-    plot_dir: Optional[str] = None
-    pool_key: Optional[str] = None
-    farmer_key: Optional[str] = None
+    temp_dir_id: Optional[UUID] = None
+    final_dir_id: Optional[UUID] = None
     plots_amount: Optional[int] = None
 
 
@@ -36,10 +32,10 @@ class PlotQueueReturn(APIModel):
     id: UUID
     plot_task_id: Optional[UUID]
     server_id: UUID
-    create_dir: str
-    plot_dir: str
-    pool_key: str
-    farmer_key: str
+
+    temp_dir_id: UUID
+    final_dir_id: UUID
+
     plots_amount: int
     created: datetime
     status: PlotQueueStatus

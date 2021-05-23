@@ -13,8 +13,7 @@ class PlotStatus(Enum):
     PENDING = "pending"
     PLOTTING = "plotting"
     PLOTTED = "plotted"
-    TRANSFERRED = "transferred"
-    HARVESTING = "harvesting"
+    TRANSFERRING = "transferring"
     LOST = "lost"
 
 
@@ -22,7 +21,7 @@ class PlotCreate(APIModel):
     name: str
     location: str
     created_queue_id: Optional[UUID]
-    located_server_id: UUID
+    located_directory_id: UUID
     status: PlotStatus = PlotStatus.PLOTTING
 
 
@@ -35,8 +34,7 @@ class PlotReturn(APIModel):
     id: UUID
     name: str
     location: str
-    created_server_id: None = None
     created_queue_id: Optional[UUID]
-    located_server_id: UUID
+    located_directory_id: UUID
     created: datetime
     status: PlotStatus

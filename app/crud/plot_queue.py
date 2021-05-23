@@ -21,3 +21,15 @@ class CRUDPlotQueue(
     ) -> tuple[int, list[models.PlotQueue]]:
         query = db.query(self.model).filter(self.model.server == server)
         return self._filter_multi_query(query, filtration)
+
+    def get_multi_linked_to_directory(
+        self,
+        db: Session,
+        *,
+        directory: models.Directory,
+        filtration: schemas.FilterData[Any] = schemas.FilterData[Any]()
+    ) -> tuple[int, list[models.PlotQueue]]:
+        query = db.query(self.model).filter(
+            (self.model.temp_dir == directory) | (self.model.final_dir == directory)
+        )
+        return self._filter_multi_query(query, filtration)
