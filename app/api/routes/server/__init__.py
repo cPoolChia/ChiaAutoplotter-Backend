@@ -55,8 +55,18 @@ class ServerCBV(BaseAuthCBV):
     ) -> schemas.ServerReturn:
         return schemas.ServerReturn.from_orm(server)
 
-    @router.post("/")
+    @router.post("/", status_code=201)
     def add_item(self, data: schemas.ServerCreate) -> schemas.ServerReturn:
+        same_name_server = crud.server.get_by_name(self.db, name=data.name)
+        if same_name_server is not None:
+            raise HTTPException(403, detail="Server with such name already exists")
+
+        same_hostname_server = crud.server.get_by_hostname(
+            self.db, hostname=data.hostname
+        )
+        if same_hostname_server is not None:
+            raise HTTPException(403, detail="Server with such hostname already exists")
+
         server = crud.server.create(self.db, obj_in=data)
         init_task: celery.AsyncResult = tasks.init_server_connect.apply_async(
             (server.id,), eta=datetime.now() + timedelta(seconds=5)

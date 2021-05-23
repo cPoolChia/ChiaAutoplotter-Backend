@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class Server(Base):
     name = Column(String(200), nullable=False, index=True, unique=True)
-    hostname = Column(String(200), nullable=False)
+    hostname = Column(String(200), nullable=False, unique=True)
     username = Column(String(30), nullable=False)
     password = Column(String(200), nullable=False)
     pool_key = Column(String(100), nullable=False)

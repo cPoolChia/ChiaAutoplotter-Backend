@@ -11,6 +11,7 @@ from app.api import deps
 from app import crud, schemas
 from fastapi.logger import logger
 
+
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} Rest API",
     description=f"An API for {settings.PROJECT_NAME}",

@@ -18,7 +18,7 @@ class Directory(Base):
     server = relationship(
         "Server", foreign_keys=[server_id], back_populates="directories"
     )
-    plots = relationship("Plot", uselist=True, back_populates="located_directory_id")
+    plots = relationship("Plot", uselist=True)
     status = Column(String(40), nullable=False, default="pending")
     disk_size = Column(Integer, nullable=True)
     disk_taken = Column(Integer, nullable=True)
