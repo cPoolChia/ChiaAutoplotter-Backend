@@ -33,6 +33,14 @@ services:
         environment:
             - REDIS_REPLICATION_MODE=master
 
+    ubuntu:
+        image: rastasheep/ubuntu-sshd:18.04
+        restart: always
+        expose:
+            - "22"
+        ports:
+            - "49154:22"
+
     celery_worker:
         build: .
         depends_on:

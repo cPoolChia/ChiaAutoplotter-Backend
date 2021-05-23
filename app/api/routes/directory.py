@@ -22,11 +22,11 @@ router = InferringRouter()
 class DirectoryCBV(BaseAuthCBV):
     directory: models.Directory = Depends(deps.get_directory_by_id)
 
-    @router.get("/{directory_id}/")
+    @router.get("/")
     def get_directory_data(self) -> schemas.DirectoryReturn:
         return schemas.DirectoryReturn.from_orm(self.directory)
 
-    @router.get("/{directory_id}/plots/")
+    @router.get("/plots/")
     def get_plots_in_directory(
         self,
         filtration: schemas.FilterData[models.Plot] = Depends(
@@ -38,7 +38,7 @@ class DirectoryCBV(BaseAuthCBV):
         )
         return schemas.Table[schemas.PlotReturn](amount=amount, items=items)
 
-    @router.get("/{directory_id}/queues/")
+    @router.get("/queues/")
     def get_queues_linked_to_directory(
         self,
         filtration: schemas.FilterData[models.PlotQueue] = Depends(
@@ -50,7 +50,7 @@ class DirectoryCBV(BaseAuthCBV):
         )
         return schemas.Table[schemas.PlotQueueReturn](amount=amount, items=items)
 
-    @router.delete("/{directory_id}/")
+    @router.delete("/")
     def remove_directory(self) -> schemas.Msg:
         linked_queues_amount, _ = crud.plot_queue.get_multi_linked_to_directory(
             self.db, directory=self.directory

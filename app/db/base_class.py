@@ -6,6 +6,9 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.mysql import DATETIME
 import uuid
 
+# NOTE Fixes a warning
+GUID.cache_ok = False  # type: ignore
+
 
 @as_declarative()
 class Base:

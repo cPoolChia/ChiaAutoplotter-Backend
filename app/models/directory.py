@@ -15,8 +15,10 @@ if TYPE_CHECKING:
 class Directory(Base):
     location = Column(String(200), nullable=False)
     server_id = Column(GUID, ForeignKey("server.id"), index=True, nullable=False)
-    server = relationship("Server", foreign_keys=[server_id])
-    plots = relationship("Plot", use_list=True)
+    server = relationship(
+        "Server", foreign_keys=[server_id], back_populates="directories"
+    )
+    plots = relationship("Plot", uselist=True, back_populates="located_directory_id")
     status = Column(String(40), nullable=False, default="pending")
     disk_size = Column(Integer, nullable=True)
     disk_taken = Column(Integer, nullable=True)

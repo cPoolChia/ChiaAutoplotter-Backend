@@ -10,5 +10,5 @@ api_router.include_router(updates.router, prefix="/updates", tags=["Object Updat
 api_router.include_router(server.router, prefix="/server", tags=["Server"])
 api_router.include_router(plot_queue.router, prefix="/plot/queue", tags=["Plot Queue"])
 api_router.include_router(
-    directory.router, prefix="/directory", tags=["Server Directory"]
+    directory.router, prefix="/directory/{directory_id}", tags=["Server Directory"]
 )

@@ -21,7 +21,7 @@ pipeline {
     }
 
     stage('Deploy') {
-      when { branch 'main' }
+      when { branch 'production' }
       steps {
         sshCommand(remote: remote, command: 'cd efullmakt-server && docker-compose build api')
         sshCommand(remote: remote, command: 'cd efullmakt-server && docker-compose stop api')

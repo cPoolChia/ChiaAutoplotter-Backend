@@ -22,5 +22,7 @@ class Plot(Base):
         GUID, ForeignKey("directory.id"), index=True, nullable=False
     )
     created_queue = relationship("PlotQueue", foreign_keys=[created_queue_id])
-    located_directory = relationship("Directory", foreign_keys=[located_directory_id])
+    located_directory = relationship(
+        "Directory", foreign_keys=[located_directory_id], back_populates="plots"
+    )
     status = Column(String(40), nullable=False, default="pending")

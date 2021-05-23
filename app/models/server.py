@@ -19,9 +19,8 @@ class Server(Base):
     hostname = Column(String(200), nullable=False)
     username = Column(String(30), nullable=False)
     password = Column(String(200), nullable=False)
-    init_task_id = Column(GUID, nullable=True)
+    pool_key = Column(String(100), nullable=False)
+    farmer_key = Column(String(100), nullable=False)
+    init_task_id = Column(GUID, nullable=True, default=None)
     status = Column(String(40), default="pending")
-    pool_key: Column(String(100), nullable=False)
-    farmer_key: Column(String(100), nullable=False)
-
-    directories = relationship("Directory", uselist=True)
+    directories = relationship("Directory", uselist=True, back_populates="server")
