@@ -56,7 +56,8 @@ def init_server_connect(
 
                 indexes: list[str] = sorted(df.index, key=len, reverse=True)
                 for index in indexes:
-                    if directory.location.startswith(index):
+                    loc = directory.location
+                    if loc.startswith(index) or loc.startswith("/root" + index):
                         used_memory = df.loc[index, "Used"]
                         available_memory = df.loc[index, "Available"]
                         directory = crud.directory.update(
