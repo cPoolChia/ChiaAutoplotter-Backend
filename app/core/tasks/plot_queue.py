@@ -11,6 +11,7 @@ from app.core import console
 from app.api import deps
 from app.celery import celery as celery_app
 from sqlalchemy.orm import Session
+from app.db.session import DatabaseSession
 
 
 @celery_app.task(bind=True)
@@ -18,7 +19,7 @@ def plot_queue_task(
     self: celery.Task,
     plot_queue_id: UUID,
     *,
-    db_factory: Callable[[], Session] = lambda: next(deps.get_db()),
+    db_factory: Callable[[], Session] = DatabaseSession,
 ) -> Any:
     db = db_factory()
     plot_queue = crud.plot_queue.get(db, id=plot_queue_id)

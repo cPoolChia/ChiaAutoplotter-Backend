@@ -8,6 +8,7 @@ from app.core import console
 from app.api import deps
 from app.celery import celery as celery_app
 from sqlalchemy.orm import Session
+from app.db.session import DatabaseSession
 
 
 @celery_app.task(bind=True)
@@ -15,7 +16,7 @@ def init_server_connect(
     self: celery.Task,
     server_id: UUID,
     *,
-    db_factory: Callable[[], Session] = lambda: next(deps.get_db()),
+    db_factory: Callable[[], Session] = DatabaseSession,
 ) -> Any:
     db = db_factory()
     server = crud.server.get(db, id=server_id)
