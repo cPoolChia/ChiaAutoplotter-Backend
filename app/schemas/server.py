@@ -24,6 +24,10 @@ class ServerCreate(APIModel):
     farmer_key: str
 
 
+class ServerCreateExtended(ServerCreate):
+    directories: set[str] = []
+
+
 class ServerUpdate(APIModel):
     name: Optional[str] = Field()
     hostname: Optional[str] = Field()

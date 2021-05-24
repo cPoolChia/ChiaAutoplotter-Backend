@@ -37,6 +37,24 @@ def test_normal(db: Session, client: TestClient, user: User) -> None:
     assert servers_count_start + 1 == servers_count_end
 
 
+def test_with_directories(db: Session, client: TestClient, user: User) -> None:
+    dirs_count, _ = crud.directory.get_multi(db)
+    assert dirs_count == 0
+    start_directories = ["/root/plots/", "/root/plotting/"]
+    response = client.post(
+        "/server/",
+        json=schemas.ServerCreateExtended(
+            **TEST_SERVER_CREATE.dict(), directories=start_directories
+        ),
+        headers=user.auth_header,
+    )
+    assert response.status_code == 201, response.content
+    dirs_count, dirs = crud.directory.get_multi(db)
+    assert dirs_count == 2
+    for dir_name, dir_obj in zip(start_directories, dirs):
+        assert dir_name == dir_obj.location
+
+
 def test_name_collision(db: Session, client: TestClient, user: User) -> None:
     server = crud.server.create(db, obj_in=TEST_SERVER_CREATE)
     servers_count_start, _ = crud.server.get_multi(db)
