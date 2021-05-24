@@ -40,15 +40,37 @@ def init_server_connect(
 
     with connection:
         server = crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
+        df = connection.command.df()
         for directory_id in directory_ids:
             directory = crud.directory.get(db, id=directory_id)
             try:
                 connection.command.ls(dirname=directory.location)
             except NotADirectoryError:
-                crud.directory.update(db, db_obj=directory, obj_in={"status": "failed"})
+                directory = crud.directory.update(
+                    db, db_obj=directory, obj_in={"status": "failed"}
+                )
             else:
-                crud.directory.update(
+                directory = crud.directory.update(
                     db, db_obj=directory, obj_in={"status": "monitoring"}
                 )
+
+                indexes: list[str] = sorted(df.index, key=len, reverse=True)
+                for index in indexes:
+                    if directory.location.startswith(index):
+                        used_memory = df.loc[index, "Used"]
+                        available_memory = df.loc[index, "Available"]
+                        directory = crud.directory.update(
+                            db,
+                            db_obj=directory,
+                            obj_in={
+                                "disk_size": available_memory,
+                                "disk_taken": used_memory,
+                            },
+                        )
+                        break
+                else:
+                    directory = crud.directory.update(
+                        db, db_obj=directory, obj_in={"status": "failed"}
+                    )
 
         return {"info": "done", "console": connection.log_collector.get()}
