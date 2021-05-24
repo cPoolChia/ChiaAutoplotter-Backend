@@ -19,6 +19,10 @@ def init_server_connect(
 ) -> Any:
     db = db_factory()
     server = crud.server.get(db, id=server_id)
+    directory_ids = [
+        directory.id
+        for directory in crud.directory.get_multi_by_server(db, server=server)
+    ]
 
     if server is None:
         raise RuntimeError(
@@ -28,9 +32,23 @@ def init_server_connect(
     def on_failed() -> None:
         assert server is not None
         crud.server.update(db, db_obj=server, obj_in={"status": "failed"})
+        for directory_id in directory_ids:
+            directory = crud.directory.get(db, id=directory_id)
+            crud.directory.update(db, db_obj=directory, obj_in={"status": "pending"})
 
     connection = console.ConnectionManager(server, self, db, on_failed=on_failed)
 
     with connection:
-        crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
+        server = crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
+        for directory_id in directory_ids:
+            directory = crud.directory.get(db, id=directory_id)
+            try:
+                connection.command.ls(dirname=directory.location)
+            except NotADirectoryError:
+                crud.directory.update(db, db_obj=directory, obj_in={"status": "failed"})
+            else:
+                crud.directory.update(
+                    db, db_obj=directory, obj_in={"status": "monitoring"}
+                )
+
         return {"info": "done", "console": connection.log_collector.get()}
