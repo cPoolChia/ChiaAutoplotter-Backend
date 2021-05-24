@@ -51,8 +51,8 @@ def test_with_directories(db: Session, client: TestClient, user: User) -> None:
     assert response.status_code == 201, response.content
     dirs_count, dirs = crud.directory.get_multi(db)
     assert dirs_count == 2
-    for dir_name, dir_obj in zip(start_directories, dirs):
-        assert dir_name == dir_obj.location
+    for dir_obj in dirs:
+        assert dir_obj.location in start_directories
 
 
 def test_name_collision(db: Session, client: TestClient, user: User) -> None:

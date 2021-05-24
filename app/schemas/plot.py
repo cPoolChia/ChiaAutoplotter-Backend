@@ -19,7 +19,6 @@ class PlotStatus(Enum):
 
 class PlotCreate(APIModel):
     name: str
-    location: str
     created_queue_id: Optional[UUID]
     located_directory_id: UUID
     status: PlotStatus = PlotStatus.PLOTTING
@@ -33,7 +32,6 @@ class PlotUpdate(APIModel):
 class PlotReturn(APIModel):
     id: UUID
     name: str
-    location: str
     created_queue_id: Optional[UUID]
     located_directory_id: UUID
     created: datetime
