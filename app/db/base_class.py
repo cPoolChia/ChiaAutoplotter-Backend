@@ -7,7 +7,7 @@ from sqlalchemy.dialects.mysql import DATETIME
 import uuid
 
 # NOTE Fixes a warning
-GUID.cache_ok = False  # type: ignore
+GUID.cache_ok = True  # type: ignore
 
 
 @as_declarative()

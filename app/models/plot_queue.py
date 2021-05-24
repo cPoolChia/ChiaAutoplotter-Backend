@@ -23,9 +23,6 @@ class PlotQueue(Base):
     final_dir = relationship("Directory", foreign_keys=[final_dir_id])
     temp_dir = relationship("Directory", foreign_keys=[temp_dir_id])
 
-    pool_key = Column(String(255), nullable=False)
-    farmer_key = Column(String(255), nullable=False)
-
     plots_amount = Column(Integer, nullable=False)
 
     status = Column(String(40), nullable=False, default="pending")
