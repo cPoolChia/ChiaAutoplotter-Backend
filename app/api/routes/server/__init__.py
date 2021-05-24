@@ -103,10 +103,10 @@ class ServerCBV(BaseAuthCBV):
     def delete_item(
         self, server: models.Server = Depends(deps.get_server_by_id)
     ) -> schemas.Msg:
-        try:
-            crud.server.remove_obj(self.db, obj=server)
-        except Exception as error:  # TODO
+        amount, directories = crud.directory.get_multi_by_server(self.db, server=server)
+        if amount != 0:
             raise HTTPException(
-                403, detail="Server has connected entities, can not remove it"
-            ) from error
+                403, detail="Can not remove server, as there are objects linked to it"
+            )
+        crud.server.remove_obj(self.db, obj=server)
         return {"msg": "Deleted"}

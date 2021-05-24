@@ -4,6 +4,7 @@ from uuid import UUID
 from enum import Enum
 from datetime import datetime
 from fastapi_utils.api_model import APIModel
+from pydantic import Field
 
 from .plot import PlotReturn
 
@@ -24,12 +25,12 @@ class ServerCreate(APIModel):
 
 
 class ServerUpdate(APIModel):
-    name: Optional[str] = None
-    hostname: Optional[str] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    pool_key: Optional[str] = None
-    farmer_key: Optional[str] = None
+    name: Optional[str] = Field()
+    hostname: Optional[str] = Field()
+    username: Optional[str] = Field()
+    password: Optional[str] = Field()
+    pool_key: Optional[str] = Field()
+    farmer_key: Optional[str] = Field()
 
 
 class ServerReturn(APIModel):

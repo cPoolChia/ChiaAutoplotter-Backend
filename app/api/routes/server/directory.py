@@ -32,10 +32,10 @@ class DirectoryCBV(BaseAuthCBV):
         )
         return schemas.Table[schemas.DirectoryReturn](amount=amount, items=items)
 
-    @router.post("/")
+    @router.post("/", status_code=201)
     def add_new_dir(self, data: schemas.DirectoryCreate) -> schemas.DirectoryReturn:
         same_location = crud.directory.get_by_location_and_server(
-            self.db, server=self.server
+            self.db, server=self.server, location=data.location
         )
         if same_location is not None:
             raise HTTPException(

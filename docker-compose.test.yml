@@ -35,6 +35,6 @@ services:
     api:
         image: api
         build: .
-        command: "poetry run pytest -x tests/"
+        command: "poetry run pytest -v -x tests/"
         environment:
             - ENV_STATE=dev

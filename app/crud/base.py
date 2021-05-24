@@ -119,7 +119,9 @@ class CRUDBase(
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True, by_alias=False)
+            update_data = obj_in.dict(
+                exclude_unset=True, exclude_defaults=True, by_alias=False
+            )
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
