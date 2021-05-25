@@ -22,4 +22,6 @@ class Transfer(Base):
     )
     plot_id = Column(GUID, ForeignKey("plot.id"), nullable=False)
     plot = relationship("Plot", foreign_keys=[plot_id])
+    transfer_task_id = Column(GUID, nullable=True)
+    finished = Column(DATETIME(fsp=6), nullable=True, default=None)
     status = Column(String(40), default="pending", nullable=False)

@@ -11,40 +11,30 @@ from .plot import PlotReturn
 
 class TransferStatus(Enum):
     PENDING = "pending"
-    TRANSFE = "connected"
+    TRANSFERING = "transfering"
+    FINISHED = "finished"
     FAILED = "failed"
 
 
-class ServerCreate(APIModel):
-    name: str
-    hostname: str
-    username: str
-    password: str
-    pool_key: str
-    farmer_key: str
+class TransferCreate(APIModel):
+    destination_directory_id: UUID
+    plot_id: UUID
 
 
-class ServerCreateExtended(ServerCreate):
-    directories: set[str] = []
+class TransferCreateExtended(TransferCreate):
+    starting_directory_id: UUID
 
 
-class ServerUpdate(APIModel):
-    name: Optional[str] = Field()
-    hostname: Optional[str] = Field()
-    username: Optional[str] = Field()
-    password: Optional[str] = Field()
-    pool_key: Optional[str] = Field()
-    farmer_key: Optional[str] = Field()
+class TransferUpdate(APIModel):
+    ...
 
 
-class ServerReturn(APIModel):
+class TransferReturn(APIModel):
     id: UUID
-    name: str
-    hostname: str
-    username: str
-    password: str
-    pool_key: str
-    farmer_key: str
-    init_task_id: Optional[UUID]
+    starting_directory_id: UUID
+    destination_directory_id: UUID
+    plot_id: UUID
+    transfer_task_id: Optional[UUID]
     created: datetime
-    status: ServerStatus
+    finished: Optional[datetime]
+    status: TransferStatus
