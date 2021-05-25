@@ -41,7 +41,8 @@ def init_server_connect(
 
     with connection:
         server = crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
-        df = connection.command.df()
+        if directory_ids != []:
+            df = connection.command.df()
         for directory_id in directory_ids:
             directory = crud.directory.get(db, id=directory_id)
             try:
