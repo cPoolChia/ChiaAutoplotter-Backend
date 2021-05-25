@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 import uuid
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, BigInteger
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 from fastapi_utils.guid_type import GUID
@@ -20,5 +20,5 @@ class Directory(Base):
     )
     plots = relationship("Plot", uselist=True)
     status = Column(String(40), nullable=False, default="pending")
-    disk_size = Column(Integer, nullable=True)
-    disk_taken = Column(Integer, nullable=True)
+    disk_size = Column(BigInteger, nullable=True)
+    disk_taken = Column(BigInteger, nullable=True)

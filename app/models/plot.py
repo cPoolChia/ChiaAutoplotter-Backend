@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class Plot(Base):
-    name = Column(String(200), nullable=False, index=True, unique=True)
+    name = Column(String(200), nullable=False, index=True)
     created_queue_id = Column(
         GUID, ForeignKey("plotqueue.id"), index=True, nullable=True
     )

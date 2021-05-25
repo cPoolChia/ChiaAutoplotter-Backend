@@ -42,7 +42,7 @@ def scan_plotting(
 
     with connection:
         # Check queue plot directory
-        plot_location = f"{plot_queue.plot_dir}/{plot_queue.id}"
+        plot_location = f"{plot_queue.temp_dir.location}/{plot_queue.id}"
         plot_files = connection.command.ls(cd=plot_location)
         unique_plots = {
             ".".join(plot_file.split(".")[:2])
@@ -56,15 +56,14 @@ def scan_plotting(
                     db,
                     obj_in=schemas.PlotCreate(
                         name=plot_name,
-                        location=plot_location,
                         created_queue_id=plot_queue.id,
-                        located_server_id=plot_queue.server.id,
+                        located_directory_id=plot_queue.temp_dir_id,
                         status=schemas.PlotStatus.PLOTTING,
                     ),
                 )
 
         # Check queue create directory
-        created_location = f"{plot_queue.create_dir}/{plot_queue.id}"
+        created_location = f"{plot_queue.final_dir.location}/{plot_queue.id}"
         created_files = {
             plot
             for plot in connection.command.ls(cd=created_location)
@@ -77,9 +76,8 @@ def scan_plotting(
                     db,
                     obj_in=schemas.PlotCreate(
                         name=plot_name,
-                        location=plot_location,
                         created_queue_id=plot_queue.id,
-                        located_server_id=plot_queue.server.id,
+                        located_directory_id=plot_queue.final_dir_id,
                         status=schemas.PlotStatus.PLOTTED,
                     ),
                 )
@@ -94,6 +92,7 @@ def scan_plotting(
                     db_obj=plot,
                     obj_in={
                         "status": schemas.PlotStatus.PLOTTED.value,
+                        "located_directory_id": plot_queue.final_dir_id,
                         "plotting_duration": plotting_duration,
                     },
                 )
