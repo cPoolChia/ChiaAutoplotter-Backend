@@ -55,8 +55,13 @@ class ConnectionManager:
                 self.log_collector.update_log(
                     command=f"ssh {self._server.username}@{self._server.hostname}"
                 )
+                if ":" in self._server.hostname:
+                    host, port = self._server.hostname.split(":")[:2]
+                else:
+                    host, port = self._server.hostname, "22"
                 self._ssh_client.connect(
-                    hostname=self._server.hostname,
+                    hostname=host,
+                    port=int(port),
                     username=self._server.username,
                     password=self._server.password,
                 )
