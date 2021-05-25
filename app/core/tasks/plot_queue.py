@@ -63,7 +63,7 @@ def plot_queue_task(
         connection.command.rm(cd=plot_queue.plot_dir, dirname=f"{plot_queue.id}")
         connection.command.mkdir(cd="/root/", dirname=plot_dir)
 
-        crud.plot_queue.update(
+        plot_queue = crud.plot_queue.update(
             db,
             db_obj=plot_queue,
             obj_in={"status": schemas.PlotQueueStatus.PLOTTING.value},
@@ -78,12 +78,19 @@ def plot_queue_task(
             plots_amount=plot_queue.plots_amount,
         )
 
-        plot_task: celery.AsyncResult = plot_queue_task.apply_async(
-            (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
-        )
-        plot_queue = crud.plot_queue.update(
-            db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
-        )
+        if plot_queue.autoplot:
+            plot_task: celery.AsyncResult = plot_queue_task.apply_async(
+                (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
+            )
+            plot_queue = crud.plot_queue.update(
+                db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
+            )
+        else:
+            plot_queue = crud.plot_queue.update(
+                db,
+                db_obj=plot_queue,
+                obj_in={"status": schemas.PlotQueueStatus.PAUSED.value},
+            )
 
         return {
             "info": "done",
