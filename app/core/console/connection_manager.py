@@ -65,7 +65,7 @@ class ConnectionManager:
                     username=self._server.username,
                     password=self._server.password,
                 )
-            except paramiko.SSHException as connection_error:
+            except Exception as connection_error:
                 crud.server.update(
                     self._db, db_obj=self._server, obj_in={"status": "failed"}
                 )
