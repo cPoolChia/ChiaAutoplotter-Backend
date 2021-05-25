@@ -35,4 +35,5 @@ class PlotReturn(APIModel):
     created_queue_id: Optional[UUID]
     located_directory_id: UUID
     created: datetime
+    plotting_duration: Optional[datetime]
     status: PlotStatus

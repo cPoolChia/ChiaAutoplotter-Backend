@@ -25,7 +25,7 @@ def scan_plotting(
     plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
     if plot_queue is None:
         raise ValueError(f"Can not find a plot queue with id {plot_queue_id}")
-        
+
     connection = console.ConnectionManager(plot_queue.server, self, db, log_collector)
 
     # Check how queue task is doing, and if it is failed, mark queue as failed
@@ -84,10 +84,18 @@ def scan_plotting(
                     ),
                 )
             elif plot.status != schemas.PlotStatus.PLOTTED.value:
+                plotting_duration = (
+                    plot.created_queue.plotting_started - datetime.utcnow()
+                    if plot.created_queue.plotting_started is not None
+                    else None
+                )
                 crud.plot.update(
                     db,
                     db_obj=plot,
-                    obj_in={"status": schemas.PlotStatus.PLOTTED.value},
+                    obj_in={
+                        "status": schemas.PlotStatus.PLOTTED.value,
+                        "plotting_duration": plotting_duration,
+                    },
                 )
 
         # If some plots were not found, mark them as lost

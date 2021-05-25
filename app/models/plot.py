@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 from fastapi_utils.guid_type import GUID
 from app.db.base_class import Base
+from sqlalchemy.dialects.mysql import DATETIME
 
 if TYPE_CHECKING:
     from app.models import PlotQueue, Directory
@@ -24,4 +25,5 @@ class Plot(Base):
     located_directory = relationship(
         "Directory", foreign_keys=[located_directory_id], back_populates="plots"
     )
+    plotting_duration = Column(DATETIME(fsp=6), nullable=True, default=None)
     status = Column(String(40), nullable=False, default="pending")

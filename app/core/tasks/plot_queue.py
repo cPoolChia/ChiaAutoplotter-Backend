@@ -66,7 +66,10 @@ def plot_queue_task(
         plot_queue = crud.plot_queue.update(
             db,
             db_obj=plot_queue,
-            obj_in={"status": schemas.PlotQueueStatus.PLOTTING.value},
+            obj_in={
+                "status": schemas.PlotQueueStatus.PLOTTING.value,
+                "plotting_started": datetime.utcnow(),
+            },
         )
 
         connection.command.chia.plots.create(
@@ -80,7 +83,7 @@ def plot_queue_task(
 
         if plot_queue.autoplot:
             plot_task: celery.AsyncResult = plot_queue_task.apply_async(
-                (plot_queue_id,), eta=datetime.now() + timedelta(seconds=15)
+                (plot_queue_id,), eta=datetime.now() + timedelta(minutes=2)
             )
             plot_queue = crud.plot_queue.update(
                 db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
