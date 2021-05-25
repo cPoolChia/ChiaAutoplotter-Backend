@@ -45,7 +45,7 @@ class TaskEventsListener(BaseListener):
         loop: asyncio.AbstractEventLoop = asyncio.get_event_loop(),
     ) -> UUID:
         connection_id = super().connect(websocket, filter_id=filter_id, loop=loop)
-        if filter_id is not None:
+        if filter_id is not None and filter_id in self._last_events:
             loop.create_task(websocket.send_json(self._last_events[filter_id]))
         return connection_id
 
