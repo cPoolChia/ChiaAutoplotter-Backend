@@ -22,7 +22,7 @@ def init_server_connect(
     server = crud.server.get(db, id=server_id)
     directory_ids = [
         directory.id
-        for directory in crud.directory.get_multi_by_server(db, server=server)
+        for directory in crud.directory.get_multi_by_server(db, server=server)[1]
     ]
 
     if server is None:
@@ -54,13 +54,13 @@ def init_server_connect(
                 directory = crud.directory.update(
                     db, db_obj=directory, obj_in={"status": "monitoring"}
                 )
-
+                df = df.set_index("Mounted")
                 indexes: list[str] = sorted(df.index, key=len, reverse=True)
                 for index in indexes:
                     loc = directory.location
                     if loc.startswith(index) or loc.startswith("/root" + index):
-                        used_memory = df.loc[index, "Used"]
-                        available_memory = df.loc[index, "Available"]
+                        used_memory = int(df.loc[index, "Used"]) * 1024
+                        available_memory = int(df.loc[index, "Available"]) * 1024
                         directory = crud.directory.update(
                             db,
                             db_obj=directory,
