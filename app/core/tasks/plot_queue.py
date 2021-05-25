@@ -3,6 +3,7 @@ from typing import Any, Callable, TypedDict
 
 import celery
 import time
+import os.path
 from uuid import UUID
 
 from sqlalchemy.sql import schema
@@ -56,8 +57,8 @@ def plot_queue_task(
 
         connection.command.chia.init(cd="/root/chia-blockchain")
 
-        final_dir = plot_queue.final_dir.location + f"/{plot_queue.id}"
-        temp_dir = plot_queue.temp_dir.location + f"/{plot_queue.id}"
+        final_dir = os.path.join(plot_queue.final_dir.location, f"/{plot_queue.id}")
+        temp_dir = os.path.join(plot_queue.temp_dir.location, f"/{plot_queue.id}")
 
         connection.command.mkdir(cd="/root/", dirname=final_dir)
         connection.command.rm(
