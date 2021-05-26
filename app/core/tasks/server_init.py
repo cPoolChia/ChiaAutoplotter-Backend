@@ -38,7 +38,7 @@ def init_server_connect(
         crud.server.update(db, db_obj=server, obj_in={"status": "failed"})
         for directory_id in directory_ids:
             directory = crud.directory.get(db, id=directory_id)
-            crud.directory.update(db, db_obj=directory, obj_in={"status": "pending"})
+            crud.directory.update(db, db_obj=directory, obj_in={"status": "failed"})
 
     connection = console.ConnectionManager(server, self, db, on_failed=on_failed)
 
