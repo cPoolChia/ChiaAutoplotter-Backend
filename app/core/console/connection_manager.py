@@ -78,9 +78,6 @@ class ConnectionManager:
                     password=self._server.password,
                 )
             except Exception as connection_error:
-                crud.server.update(
-                    self._db, db_obj=self._server, obj_in={"status": "failed"}
-                )
                 self.log_collector.update_log(
                     stdout=(
                         f"{connection_error.__class__.__name__}: " f"{connection_error}"
@@ -93,6 +90,7 @@ class ConnectionManager:
                     error_type=connection_error.__class__.__name__,
                     console=self.log_collector.get(),
                 )
+                raise
             else:
                 self.log_collector.update_log(stdout=b"Connected successfully")
 
