@@ -58,11 +58,12 @@ class DiskFormat(BaseDirCommand[list[FilesystemData]]):
     def _process_stdout(self, log: schemas.ConsoleLog) -> list[FilesystemData]:
         super()._process_stdout(log)
         assert "Filesystem" in log.stdout, "Invalid output got from df command"
-        lines = log.stdout.split("\n")[1:]
         result: list[FilesystemData] = []
-        for line in lines:
+        for line in log.stdout.splitlines()[1:]:
+            words = line.split()
+            raise ValueError(words, list(filter(lambda s: s != "", words)))
             fs, total, used, available, use_percentage, mounted_on = list(
-                filter(lambda s: s != "", line.split())
+                filter(lambda s: s != "", words)
             )
             result.append(
                 {
