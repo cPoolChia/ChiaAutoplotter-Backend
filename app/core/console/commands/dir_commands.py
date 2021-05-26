@@ -62,7 +62,7 @@ class DiskFormat(BaseDirCommand[list[FilesystemData]]):
         result: list[FilesystemData] = []
         for line in lines:
             fs, total, used, available, use_percentage, mounted_on = list(
-                filter(lambda s: s != "", line)
+                filter(lambda s: s != "", line.split(" "))
             )
             result.append(
                 {
