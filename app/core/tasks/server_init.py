@@ -20,6 +20,9 @@ def init_server_connect(
 ) -> Any:
     db = db_factory()
     server = crud.server.get(db, id=server_id)
+    server = crud.server.update(
+        db, db_obj=server, obj_in={"init_task_id": self.request.id}
+    )
     directory_ids = [
         directory.id
         for directory in crud.directory.get_multi_by_server(db, server=server)[1]
