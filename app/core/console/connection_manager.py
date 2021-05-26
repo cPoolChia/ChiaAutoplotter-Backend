@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, Optional, Type, BinaryIO
+from typing import Any, Callable, Optional, Type, BinaryIO, TypedDict
 from types import TracebackType
 
 from sqlalchemy.orm.session import Session
@@ -14,6 +14,9 @@ import warnings
 
 
 class ConnectionManager:
+    class TaskRuntimeError(RuntimeError):
+        ...
+
     def __init__(
         self,
         server: models.Server,
@@ -76,7 +79,11 @@ class ConnectionManager:
                 )
                 self._callback_failed()
                 self._callback_finished()
-                raise
+                raise self.TaskRuntimeError(
+                    self.log_collector.get(),
+                    connection_error.__class__.__name__,
+                    connection_error.args,
+                ) from connection_error
             else:
                 self.log_collector.update_log(stdout=b"Connected successfully")
 
@@ -97,12 +104,17 @@ class ConnectionManager:
                 },
             )
             self._callback_failed()
+            self._callback_finished()
+            self._ssh_client.close()
+            self._db.close()
+            raise self.TaskRuntimeError(
+                self.log_collector.get(), exception_type.__name__, exception_value.args
+            ) from exception_value
         else:
             self._callback_success()
-
-        self._callback_finished()
-        self._ssh_client.close()
-        self._db.close()
+            self._callback_finished()
+            self._ssh_client.close()
+            self._db.close()
 
     def execute(self, command: str) -> schemas.ConsoleLog:
         BUFFER_SIZE = -1

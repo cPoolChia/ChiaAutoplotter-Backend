@@ -3,6 +3,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.celery import celery as celery_app
 from app.api import deps
 from app.core import listeners
+from app.core.console import ConnectionManager
 
 from uuid import UUID
 import time
@@ -31,7 +32,11 @@ async def websocket_endpoint(
             data=task.info,
         ),
         custom_encoder={
-            Exception: lambda e: {"type": e.__class__.__name__, "error": str(e)}
+            ConnectionManager.TaskRuntimeError: lambda e: {
+                "console": e.args[0],
+                "type": e.args[1],
+                "error": e.args[2],
+            }
         },
     )
     await websocket.send_json(task_data)
