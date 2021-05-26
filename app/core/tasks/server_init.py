@@ -76,4 +76,6 @@ def init_server_connect(
                         db, db_obj=directory, obj_in={"status": "failed"}
                     )
 
+    if connection.failed_data is None:
         return {"info": "done", "console": connection.log_collector.get()}
+    return connection.failed_data

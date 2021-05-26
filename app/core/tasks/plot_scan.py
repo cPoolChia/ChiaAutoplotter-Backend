@@ -121,4 +121,6 @@ def scan_plotting(
                     obj_in={"status": schemas.PlotStatus.LOST.value},
                 )
 
-    return {"info": "done", "console": log_collector.get()}
+    if connection.failed_data is None:
+        return {"info": "done", "console": log_collector.get()}
+    return connection.failed_data

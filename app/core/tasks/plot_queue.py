@@ -98,8 +98,10 @@ def plot_queue_task(
                 obj_in={"status": schemas.PlotQueueStatus.PAUSED.value},
             )
 
+    if connection.failed_data is None:
         return {
             "info": "done",
             "console": connection.log_collector.get(),
             "next_task_id": plot_task.id,
         }
+    return connection.failed_data
