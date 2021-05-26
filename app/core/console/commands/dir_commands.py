@@ -61,10 +61,10 @@ class DiskFormat(BaseDirCommand[list[FilesystemData]]):
         result: list[FilesystemData] = []
         for line in log.stdout.splitlines()[1:]:
             words = line.split()
-            raise ValueError(words, list(filter(lambda s: s != "", words)))
-            fs, total, used, available, use_percentage, mounted_on = list(
-                filter(lambda s: s != "", words)
-            )
+            words = list(filter(lambda s: s != "", words))
+            if len(words) != 6:
+                continue
+            fs, total, used, available, use_percentage, mounted_on = words
             result.append(
                 {
                     "filesystem": fs,
