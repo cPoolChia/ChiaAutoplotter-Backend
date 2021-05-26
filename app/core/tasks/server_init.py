@@ -47,7 +47,7 @@ def init_server_connect(
         for directory_id in directory_ids:
             directory = crud.directory.get(db, id=directory_id)
             try:
-                connection.command.ls(dirname=directory.location)
+                filenames = connection.command.ls(dirname=directory.location)
             except NotADirectoryError:
                 directory = crud.directory.update(
                     db, db_obj=directory, obj_in={"status": "failed"}
@@ -56,6 +56,22 @@ def init_server_connect(
                 directory = crud.directory.update(
                     db, db_obj=directory, obj_in={"status": "monitoring"}
                 )
+                standalone_plots = {
+                    filename for filename in filenames if filename.endswith(".plot")
+                }
+                for plot_name in standalone_plots:
+                    plot = crud.plot.get_by_name(db, name=plot_name)
+                    if plot is None:
+                        crud.plot.create(
+                            db,
+                            obj_in=schemas.PlotCreate(
+                                name=plot_name,
+                                created_queue_id=None,
+                                located_directory_id=directory_id,
+                                status=schemas.PlotStatus.PLOTTED,
+                            ),
+                        )
+                directory = crud.directory.get(db, id=directory_id)
                 df = connection.command.df(dirname=directory.location)
                 total_used = sum(line["used"] for line in df)
                 total_size = sum(line["total"] for line in df)

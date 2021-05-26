@@ -137,6 +137,18 @@ class ConnectionManager:
 
         return log_data
 
+    def warn(self, message: str) -> None:
+        self.log_collector.update_log(
+            stdout=f"\nExecution Warning: {message}\n".encode("utf-8")
+        )
+        self._task.send_event(
+            "task-update",
+            data={
+                "info": "Warning",
+                "console": self.log_collector.get(),
+            },
+        )
+
     @property
     def command(self) -> CommandList:
         return CommandList(self)
