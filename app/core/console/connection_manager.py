@@ -95,7 +95,7 @@ class ConnectionManager:
         exception_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
-        if exception_type is not None and exception_value is not None:
+        if exception_type is not None or exception_value is not None:
             self._task.send_event(
                 "task-failed",
                 data={
