@@ -10,7 +10,7 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        sh 'docker-compose -f docker-compose.test.yml -H tcp://localhost:2375 build'
+        sh 'docker-compose -f docker-compose.test.yml build'
       }
     }
 
