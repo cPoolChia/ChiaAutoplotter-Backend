@@ -57,14 +57,14 @@ def plot_queue_task(
 
         connection.command.chia.init(cd="/root/chia-blockchain")
 
-        final_dir = os.path.join(plot_queue.final_dir.location, f"/{plot_queue.id}")
-        temp_dir = os.path.join(plot_queue.temp_dir.location, f"/{plot_queue.id}")
+        final_dir = os.path.join(plot_queue.final_dir.location, f"{plot_queue.id}")
+        temp_dir = os.path.join(plot_queue.temp_dir.location, f"{plot_queue.id}")
 
-        connection.command.mkdir(cd="/root/", dirname=final_dir)
+        connection.command.mkdir(dirname=final_dir)
         connection.command.rm(
             cd=plot_queue.temp_dir.location, dirname=f"{plot_queue.id}"
         )
-        connection.command.mkdir(cd="/root/", dirname=temp_dir)
+        connection.command.mkdir(dirname=temp_dir)
 
         plot_queue = crud.plot_queue.update(
             db,
