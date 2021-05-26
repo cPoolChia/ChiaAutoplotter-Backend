@@ -1,5 +1,5 @@
 from app import schemas
-from typing import Any, Optional, TypeVar
+from typing import Any, Optional, TypeVar, TypedDict
 from .base import BaseCommand
 
 _T = TypeVar("_T")
@@ -41,3 +41,37 @@ class CreateDirectoryCommand(BaseDirCommand[bool]):
 
 class RemoveDirectoryCommand(BaseDirCommand[None]):
     _command = "rm -rf"
+
+
+class FilesystemData(TypedDict):
+    filesystem: str
+    total: int
+    used: int
+    available: int
+    use_percentage: str
+    mounted_on: str
+
+
+class DiskFormat(BaseDirCommand[list[FilesystemData]]):
+    _command = "df"
+
+    def _process_stdout(self, log: schemas.ConsoleLog) -> list[FilesystemData]:
+        super()._process_stdout(log)
+        assert "Filesystem" in log.stdout, "Invalid output got from df command"
+        lines = log.stdout.split("\n")[1:]
+        result: list[FilesystemData] = []
+        for line in lines:
+            fs, total, used, available, use_percentage, mounted_on = list(
+                filter(lambda s: s != "", line)
+            )
+            result.append(
+                {
+                    "filesystem": fs,
+                    "total": int(total) * 1024,
+                    "used": int(used) * 1024,
+                    "available": int(available) * 1024,
+                    "use_percentage": use_percentage,
+                    "mounted_on": mounted_on,
+                }
+            )
+        return result

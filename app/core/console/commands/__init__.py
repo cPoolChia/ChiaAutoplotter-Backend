@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from .base import BaseCommand
 from .dir_commands import *
 from .chia import *
-from .df import *
 
 if TYPE_CHECKING:
     from ..connection_manager import ConnectionManager

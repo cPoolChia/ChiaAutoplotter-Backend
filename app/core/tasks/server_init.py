@@ -41,8 +41,6 @@ def init_server_connect(
 
     with connection:
         server = crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
-        if directory_ids != []:
-            df = connection.command.df()
         for directory_id in directory_ids:
             directory = crud.directory.get(db, id=directory_id)
             try:
@@ -55,26 +53,17 @@ def init_server_connect(
                 directory = crud.directory.update(
                     db, db_obj=directory, obj_in={"status": "monitoring"}
                 )
-                df = df.set_index("Mounted")
-                indexes: list[str] = sorted(df.index, key=len, reverse=True)
-                for index in indexes:
-                    loc = directory.location
-                    if loc.startswith(index) or loc.startswith("/root" + index):
-                        used_memory = int(df.loc[index, "Used"]) * 1024
-                        available_memory = int(df.loc[index, "Available"]) * 1024
-                        directory = crud.directory.update(
-                            db,
-                            db_obj=directory,
-                            obj_in={
-                                "disk_size": available_memory,
-                                "disk_taken": used_memory,
-                            },
-                        )
-                        break
-                else:
-                    directory = crud.directory.update(
-                        db, db_obj=directory, obj_in={"status": "failed"}
-                    )
+                df = connection.command.df(dirname=directory.location)
+                total_used = sum(line["used"] for line in df)
+                total_size = sum(line["total"] for line in df)
+                directory = crud.directory.update(
+                    db,
+                    db_obj=directory,
+                    obj_in={
+                        "disk_size": total_size,
+                        "disk_taken": total_used,
+                    },
+                )
 
     if connection.failed_data is None:
         return {"info": "done", "console": connection.log_collector.get()}

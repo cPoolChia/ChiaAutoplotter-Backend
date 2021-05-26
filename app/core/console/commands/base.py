@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
-class ConsoleExecutionError(Exception):
+class ConsoleExecutionError(RuntimeError):
     ...
 
 
@@ -22,7 +22,10 @@ class BaseCommand(ABC, Generic[_T]):
 
     def __call__(self, *, cd: Optional[str] = None, **kwargs: str) -> _T:
         log = self._connection.execute("; ".join(self._create_command(cd=cd, **kwargs)))
-        return self._process_stdout(log)
+        try:
+            return self._process_stdout(log)
+        except AssertionError as error:
+            raise ConsoleExecutionError(*error.args) from error
 
     @classmethod
     def _create_command(cls, *, cd: Optional[str] = None, **kwargs: str) -> list[str]:
