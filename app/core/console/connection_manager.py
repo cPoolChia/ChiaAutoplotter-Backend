@@ -79,11 +79,14 @@ class ConnectionManager:
                 )
                 self._callback_failed()
                 self._callback_finished()
-                raise self.TaskRuntimeError(
-                    self.log_collector.get(),
-                    connection_error.__class__.__name__,
-                    connection_error.args,
-                ) from connection_error
+                self._task.send_event(
+                    "task-failed",
+                    data={
+                        "info": f"Error: {connection_error}",
+                        "error_type": connection_error.__class__.__name__,
+                        "console": self.log_collector.get(),
+                    },
+                )
             else:
                 self.log_collector.update_log(stdout=b"Connected successfully")
 
@@ -94,27 +97,25 @@ class ConnectionManager:
         exception_type: Optional[Type[BaseException]],
         exception_value: Optional[BaseException],
         traceback: Optional[TracebackType],
-    ) -> None:
+    ) -> bool:
         if exception_type is not None or exception_value is not None:
             self._task.send_event(
                 "task-failed",
                 data={
                     "info": f"Error: {exception_value}",
                     "error_type": exception_type.__name__,
+                    "console": self.log_collector.get(),
                 },
             )
             self._callback_failed()
-            self._callback_finished()
-            self._ssh_client.close()
-            self._db.close()
-            raise self.TaskRuntimeError(
-                self.log_collector.get(), exception_type.__name__, exception_value.args
-            ) from exception_value
         else:
             self._callback_success()
-            self._callback_finished()
-            self._ssh_client.close()
-            self._db.close()
+
+        self._callback_finished()
+        self._ssh_client.close()
+        self._db.close()
+
+        return True
 
     def execute(self, command: str) -> schemas.ConsoleLog:
         BUFFER_SIZE = -1
