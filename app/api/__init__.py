@@ -9,6 +9,7 @@ from app.api.routes import (
     updates,
     directory,
     transfer,
+    plot,
 )
 
 api_router = APIRouter()
@@ -21,4 +22,5 @@ api_router.include_router(plot_queue.router, prefix="/plot/queue", tags=["Plot Q
 api_router.include_router(
     directory.router, prefix="/directory/{directory_id}", tags=["Server Directory"]
 )
-api_router.include_router(transfer.router, prefix="/transfer", tags="Plot transfer")
+api_router.include_router(transfer.router, prefix="/transfer", tags=["Plot transfer"])
+api_router.include_router(plot.router, prefix="/plot", tags=["Plot"])
