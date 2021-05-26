@@ -43,8 +43,7 @@ class ConnectionManager:
     def failed_data(self) -> Optional[dict[str, Any]]:
         return self._failed_data
 
-    @failed_data.setter
-    def set_failed_data(self, value: dict[str, Any]) -> None:
+    def set_failed(self, **value: Any) -> None:
         self._failed_data = value
         self._task.send_event("task-failed", data=self._failed_data)
 
@@ -89,11 +88,11 @@ class ConnectionManager:
                 )
                 self._callback_failed()
                 self._callback_finished()
-                self.failed_data = {
-                    "info": f"Error: {connection_error}",
-                    "error_type": connection_error.__class__.__name__,
-                    "console": self.log_collector.get(),
-                }
+                self.set_failed(
+                    info=f"Error: {connection_error}",
+                    error_type=connection_error.__class__.__name__,
+                    console=self.log_collector.get(),
+                )
             else:
                 self.log_collector.update_log(stdout=b"Connected successfully")
 
@@ -106,11 +105,11 @@ class ConnectionManager:
         traceback: Optional[TracebackType],
     ) -> bool:
         if exception_type is not None or exception_value is not None:
-            self.failed_data = {
-                "info": f"Error: {exception_value}",
-                "error_type": exception_type.__name__,
-                "console": self.log_collector.get(),
-            }
+            self.set_failed(
+                info=f"Error: {exception_value}",
+                error_type=exception_type.__name__,
+                console=self.log_collector.get(),
+            )
             self._callback_failed()
         else:
             self._callback_success()
