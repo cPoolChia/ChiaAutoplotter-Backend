@@ -44,7 +44,7 @@ def scan_plotting(
     with connection:
         # Check queue plot directory
         plot_location = os.path.join(
-            f"{plot_queue.temp_dir.location}", f"/{plot_queue.id}"
+            f"{plot_queue.temp_dir.location}", f"{plot_queue.id}"
         )
         plot_files = connection.command.ls(cd=plot_location)
         unique_plots = {
@@ -67,7 +67,7 @@ def scan_plotting(
 
         # Check queue create directory
         created_location = os.path.join(
-            f"{plot_queue.final_dir.location}", f"/{plot_queue.id}"
+            f"{plot_queue.final_dir.location}", f"{plot_queue.id}"
         )
         created_files = {
             plot
