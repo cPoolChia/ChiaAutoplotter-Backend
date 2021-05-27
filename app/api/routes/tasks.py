@@ -40,9 +40,9 @@ async def websocket_endpoint(
         },
     )
     await websocket.send_json(task_data)
+
     if not task.ready():
         connection_id = celery_events_listener.connect(websocket, uuid)
-
         try:
             while True:
                 await websocket.receive_json()

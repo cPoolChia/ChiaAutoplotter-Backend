@@ -1,3 +1,4 @@
+from app.schemas.directory import DirectoryReturn
 from typing import Any, Callable, TypedDict
 
 import celery
@@ -8,7 +9,7 @@ from app.core import console
 from app.api import deps
 from app.celery import celery as celery_app
 from sqlalchemy.orm import Session
-from app.db.session import DatabaseSession
+from app.db.session import DatabaseSession, session_manager
 
 
 @celery_app.task(bind=True)
@@ -16,73 +17,85 @@ def init_server_connect(
     self: celery.Task,
     server_id: UUID,
     *,
-    db_factory: Callable[[], Session] = DatabaseSession,
+    session_factory: Callable[[], Session] = DatabaseSession,
 ) -> Any:
-    db = db_factory()
-    server = crud.server.get(db, id=server_id)
-    server = crud.server.update(
-        db, db_obj=server, obj_in={"init_task_id": self.request.id}
-    )
-    directory_ids = [
-        directory.id
-        for directory in crud.directory.get_multi_by_server(db, server=server)[1]
-    ]
-
-    if server is None:
-        raise RuntimeError(
-            f"Can not find a server data with id {server_id} in a database"
+    with session_manager(session_factory) as db:
+        server = crud.server.get(db, id=server_id)
+        if server is None:
+            raise RuntimeError(
+                f"Can not find a server data with id {server_id} in a database"
+            )
+        server = crud.server.update(
+            db, db_obj=server, obj_in={"init_task_id": self.request.id}
         )
+        directories = [
+            schemas.DirectoryReturn.from_orm(directory)
+            for directory in crud.directory.get_multi_by_server(db, server=server)[1]
+        ]
 
     def on_failed() -> None:
-        assert server is not None
-        crud.server.update(db, db_obj=server, obj_in={"status": "failed"})
-        for directory_id in directory_ids:
-            directory = crud.directory.get(db, id=directory_id)
-            crud.directory.update(db, db_obj=directory, obj_in={"status": "failed"})
+        with session_manager(session_factory) as db:
+            server = crud.server.get(db, id=server_id)
+            if server is None:
+                return
+            crud.server.update(db, db_obj=server, obj_in={"status": "failed"})
+            for directory in directories:
+                directory_obj = crud.directory.get(db, id=directory.id)
+                if directory_obj is None:
+                    continue
+                crud.directory.update(db, db_obj=directory, obj_in={"status": "failed"})
 
     connection = console.ConnectionManager(server, self, db, on_failed=on_failed)
 
     with connection:
-        server = crud.server.update(db, db_obj=server, obj_in={"status": "connected"})
-        for directory_id in directory_ids:
-            directory = crud.directory.get(db, id=directory_id)
+        with session_manager(session_factory) as db:
+            server = crud.server.get(db, id=server_id)
+            if server is None:
+                raise RuntimeError(f"Server with id {server_id} has gone away")
+            server = crud.server.update(
+                db, db_obj=server, obj_in={"status": "connected"}
+            )
+        for directory in directories:
             try:
                 filenames = connection.command.ls(dirname=directory.location)
             except NotADirectoryError:
-                directory = crud.directory.update(
-                    db, db_obj=directory, obj_in={"status": "failed"}
-                )
-            else:
-                directory = crud.directory.update(
-                    db, db_obj=directory, obj_in={"status": "monitoring"}
-                )
-                standalone_plots = {
-                    filename for filename in filenames if filename.endswith(".plot")
-                }
-                for plot_name in standalone_plots:
-                    plot = crud.plot.get_by_name(db, name=plot_name)
-                    if plot is None:
-                        crud.plot.create(
-                            db,
-                            obj_in=schemas.PlotCreate(
-                                name=plot_name,
-                                created_queue_id=None,
-                                located_directory_id=directory_id,
-                                status=schemas.PlotStatus.PLOTTED,
-                            ),
+                with session_manager(session_factory) as db:
+                    directory_obj = crud.directory.get(db, id=directory.id)
+                    if directory_obj is not None:
+                        directory_obj = crud.directory.update(
+                            db, db_obj=directory, obj_in={"status": "failed"}
                         )
-                directory = crud.directory.get(db, id=directory_id)
+            else:
                 df = connection.command.df(dirname=directory.location)
-                total_used = sum(line["used"] for line in df)
-                total_size = sum(line["total"] for line in df)
-                directory = crud.directory.update(
-                    db,
-                    db_obj=directory,
-                    obj_in={
-                        "disk_size": total_size,
-                        "disk_taken": total_used,
-                    },
-                )
+                with session_manager(session_factory) as db:
+                    directory_obj = crud.directory.update(
+                        db, db_obj=directory, obj_in={"status": "monitoring"}
+                    )
+                    standalone_plots = {
+                        filename for filename in filenames if filename.endswith(".plot")
+                    }
+                    for plot_name in standalone_plots:
+                        plot = crud.plot.get_by_name(db, name=plot_name)
+                        if plot is None:
+                            crud.plot.create(
+                                db,
+                                obj_in=schemas.PlotCreate(
+                                    name=plot_name,
+                                    created_queue_id=None,
+                                    located_directory_id=directory.id,
+                                    status=schemas.PlotStatus.PLOTTED,
+                                ),
+                            )
+                    total_used = sum(line["used"] for line in df)
+                    total_size = sum(line["total"] for line in df)
+                    directory_obj = crud.directory.update(
+                        db,
+                        db_obj=directory_obj,
+                        obj_in={
+                            "disk_size": total_size,
+                            "disk_taken": total_used,
+                        },
+                    )
 
     if connection.failed_data is None:
         return {"info": "done", "console": connection.log_collector.get()}

@@ -19,9 +19,8 @@ class ConnectionManager:
 
     def __init__(
         self,
-        server: models.Server,
+        server: schemas.ServerReturn,
         task: celery.AsyncTask,
-        db: Session,
         log_collector: Optional[ConsoleLogCollector] = None,
         *,
         on_failed: Optional[Callable[[], None]] = None,
@@ -31,7 +30,6 @@ class ConnectionManager:
         self._server = server
         self.log_collector = log_collector or ConsoleLogCollector()
         self._task = task
-        self._db = db
         self._on_failed = on_failed
         self._on_success = on_success
         self._on_finished = on_finished
@@ -114,7 +112,6 @@ class ConnectionManager:
 
         self._callback_finished()
         self._ssh_client.close()
-        self._db.close()
 
         return True
 
