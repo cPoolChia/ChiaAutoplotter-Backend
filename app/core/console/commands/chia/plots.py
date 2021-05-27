@@ -20,6 +20,9 @@ class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
         pool_key: str = settings.CHIA_POOL_KEY,
         farmer_key: str = settings.CHIA_FARMER_KEY,
         plots_amount: str = "1",
+        k: str = "16",
+        threads: str = "2",
+        ram: str = "4608",
         **kwargs: str,
     ) -> None:
         return super().__call__(
@@ -29,6 +32,9 @@ class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
             pool_key=pool_key,
             farmer_key=farmer_key,
             plots_amount=plots_amount,
+            k=k,
+            threads=threads,
+            ram=ram,
             **kwargs,
         )
 
@@ -42,6 +48,9 @@ class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
         pool_key: str = settings.CHIA_POOL_KEY,
         farmer_key: str = settings.CHIA_FARMER_KEY,
         plots_amount: str = "1",
+        k: str = "16",
+        threads: str = "2",
+        ram: str = "4608",
         **kwargs: str,
     ) -> list[str]:
         orig_command = super()._create_command(cd=cd)
@@ -54,6 +63,9 @@ class ChiaPlotsCreateCommand(BaseChiaCommand[None]):
                 "n": plots_amount,
                 "p": pool_key,
                 "f": farmer_key,
+                "k": k,
+                "r": threads,
+                "b": ram,
             }
         )
         return orig_command[:-1] + [f"{orig_command[-1]} {command_params}"]

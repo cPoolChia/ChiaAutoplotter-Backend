@@ -33,6 +33,7 @@ def scan_plotting(
         created_location = os.path.join(
             f"{plot_queue.final_dir.location}", f"{plot_queue.id}"
         )
+        server_data = schemas.ServerReturn.from_orm(plot_queue.server)
 
         # Check how queue task is doing, and if it is failed, mark queue as failed
         task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
@@ -46,7 +47,9 @@ def scan_plotting(
                 obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
             )
 
-    connection = console.ConnectionManager(plot_queue.server, self, log_collector)
+    connection = console.ConnectionManager(
+        server_data, self, log_collector=log_collector
+    )
 
     with connection:
         # Check queue plot directory

@@ -28,6 +28,8 @@ def init_server_connect(
         server = crud.server.update(
             db, db_obj=server, obj_in={"init_task_id": self.request.id}
         )
+        server_data = schemas.ServerReturn.from_orm(server)
+
         directories = [
             schemas.DirectoryReturn.from_orm(directory)
             for directory in crud.directory.get_multi_by_server(db, server=server)[1]
@@ -43,9 +45,11 @@ def init_server_connect(
                 directory_obj = crud.directory.get(db, id=directory.id)
                 if directory_obj is None:
                     continue
-                crud.directory.update(db, db_obj=directory, obj_in={"status": "failed"})
+                crud.directory.update(
+                    db, db_obj=directory_obj, obj_in={"status": "failed"}
+                )
 
-    connection = console.ConnectionManager(server, self, db, on_failed=on_failed)
+    connection = console.ConnectionManager(server_data, self, on_failed=on_failed)
 
     with connection:
         with session_manager(session_factory) as db:
@@ -63,13 +67,14 @@ def init_server_connect(
                     directory_obj = crud.directory.get(db, id=directory.id)
                     if directory_obj is not None:
                         directory_obj = crud.directory.update(
-                            db, db_obj=directory, obj_in={"status": "failed"}
+                            db, db_obj=directory_obj, obj_in={"status": "failed"}
                         )
             else:
                 df = connection.command.df(dirname=directory.location)
                 with session_manager(session_factory) as db:
+                    directory_obj = crud.directory.get(db, id=directory.id)
                     directory_obj = crud.directory.update(
-                        db, db_obj=directory, obj_in={"status": "monitoring"}
+                        db, db_obj=directory_obj, obj_in={"status": "monitoring"}
                     )
                     standalone_plots = {
                         filename for filename in filenames if filename.endswith(".plot")
