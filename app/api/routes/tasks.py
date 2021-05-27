@@ -36,7 +36,8 @@ async def websocket_endpoint(
                 "console": e.args[0],
                 "type": e.args[1],
                 "error": e.args[2],
-            }
+            },
+            Exception: lambda e: {"type": e.__class__.__name__, "error": str(e)},
         },
     )
     await websocket.send_json(task_data)
