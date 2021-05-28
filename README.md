@@ -4,6 +4,7 @@
 
 # FastAPI Celery SQLAlchemy Boilerplate
 
+Warning: The program is still in development
 A small boilerplate for backend projects on Python combining some usefull frameworks.
 
 # How to run
