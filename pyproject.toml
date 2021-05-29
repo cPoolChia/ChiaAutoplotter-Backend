@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ChiaFarmerManager"
+name = "ChiaAutoplotter"
 version = "0.1.0"
 description = "A backend with FastAPI, Celery and SQLAlchemy to control flow of Chia plotting and harvesting on multiple machines"
 authors = ["LeaveMyYard"]
