@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 class PlotQueue(Base):
     server_id = Column(GUID, ForeignKey("server.id"), index=True, nullable=False)
     server = relationship("Server", foreign_keys=[server_id])
-    plot_task_id = Column(GUID, default=None)
-    scan_task_id = Column(GUID, default=None)
+    execution_id = Column(GUID, default=None)
+
     final_dir_id = Column(GUID, ForeignKey("directory.id"), nullable=False)
     temp_dir_id = Column(GUID, ForeignKey("directory.id"), nullable=False)
     final_dir = relationship("Directory", foreign_keys=[final_dir_id])

@@ -45,6 +45,5 @@ class ServerReturn(APIModel):
     password: str
     pool_key: str
     farmer_key: str
-    init_task_id: Optional[UUID]
     created: datetime
     status: ServerStatus

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from .base import BaseCommand
 from .dir_commands import *
 from .chia import *
+from .worker import *
 
 if TYPE_CHECKING:
     from ..connection_manager import ConnectionManager
@@ -16,3 +17,4 @@ class CommandList:
         self.chia = ChiaCommand(connection)
         self.rm = RemoveDirectoryCommand(connection)
         self.df = DiskFormat(connection)
+        self.worker = WorkerStartCommand(connection)

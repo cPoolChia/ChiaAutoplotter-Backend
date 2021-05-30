@@ -23,6 +23,23 @@ class PlotQueueCreate(APIModel):
     plots_amount: int
 
 
+class PlottingData(APIModel):
+    final_dir: str
+    temp_dir: str
+    pool_key: str
+    farmer_key: str
+    plots_amount: int
+    k: int
+    threads: int
+    ram: int
+
+
+class PlottingReturn(APIModel):
+    id: UUID
+    status_code: Optional[int] = None
+    finished: bool = False
+
+
 class PlotQueueUpdate(APIModel):
     temp_dir_id: Optional[UUID] = None
     final_dir_id: Optional[UUID] = None
@@ -32,7 +49,7 @@ class PlotQueueUpdate(APIModel):
 
 class PlotQueueReturn(APIModel):
     id: UUID
-    plot_task_id: Optional[UUID]
+    execution_id: Optional[UUID]
     server_id: UUID
     temp_dir_id: UUID
     final_dir_id: UUID

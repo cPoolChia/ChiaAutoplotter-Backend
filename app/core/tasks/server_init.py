@@ -3,6 +3,7 @@ from app.schemas.directory import DirectoryReturn
 from typing import Any, Callable, TypedDict
 
 import celery
+import requests
 import time
 from uuid import UUID
 from app import schemas, crud
@@ -31,13 +32,6 @@ def server_connect_task(
                     f"Can not find a server data with id {server_id} in a database"
                 )
 
-            if server.init_task_id is not None:
-                task = celery_app.AsyncResult(str(server.init_task_id))
-                task.forget()
-
-            server = crud.server.update(
-                db, db_obj=server, obj_in={"init_task_id": self.request.id}
-            )
             server_data = schemas.ServerReturn.from_orm(server)
 
             directory_objects = crud.directory.get_multi_by_server(db, server=server)[1]
@@ -72,6 +66,40 @@ def server_connect_task(
                 server = crud.server.update(
                     db, db_obj=server, obj_in={"status": "connected"}
                 )
+
+            root_folders = connection.command.ls(dirname="/root")
+            if "chia-blockchain" not in root_folders:
+                connection.command.chia.install()
+
+            if "ChiaAutoplotter-Worker" not in root_folders:
+                connection.command.worker()
+
+            host = server_data.hostname.split(":")[0]
+            worker_password = server.worker_password
+            worker_port = server.worker_port
+
+            login_responce = requests.post(
+                f"http://{host}:{worker_port}/login/access-token/",
+                data={"username": "admin", "password": worker_password},
+            )
+
+            if not login_responce.ok:
+                register_request = requests.post(
+                    f"http://{host}:{worker_port}/user/",
+                    json={"nickname": "admin", "password": worker_password},
+                )
+                if not register_request.ok:
+                    with session_manager(session_factory) as db:
+                        server = crud.server.get(db, id=server_id)
+                        if server is None:
+                            raise RuntimeError(
+                                f"Server with id {server_id} has gone away"
+                            )
+                        server = crud.server.update(
+                            db, db_obj=server, obj_in={"status": "failed"}
+                        )
+                    continue
+
             for directory in directories:
                 try:
                     filenames = connection.command.ls(dirname=directory.location)

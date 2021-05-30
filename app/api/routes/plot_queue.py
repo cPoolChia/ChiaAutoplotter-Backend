@@ -1,21 +1,16 @@
-from typing import Any
-from uuid import UUID, uuid4
-import celery
-
-from datetime import datetime, timedelta
+from uuid import UUID
 from app import crud, models, schemas
 from app.celery import celery as celery_app
 from app.api import deps
-from app.core.config import settings
-from app.utils import auth
-from app.core import tasks
-from fastapi import APIRouter, Depends, HTTPException, Body, Query
-from sqlalchemy.orm import Session
+from app.core import listeners, tasks
+from fastapi import Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from fastapi_utils.tasks import repeat_every
+from fastapi.encoders import jsonable_encoder
 from app.api.routes.base import BaseAuthCBV
-from app.db.session import DatabaseSession
+from app.db.session import DatabaseSession, session_manager
+import time
+import websockets
 
 router = InferringRouter()
 
@@ -55,51 +50,20 @@ class PlotQueueCBV(BaseAuthCBV):
             )
 
         plot_queue = crud.plot_queue.create(self.db, obj_in=data)
-        plot_task = tasks.plot_queue_task.delay(plot_queue.id)
-        plot_queue = crud.plot_queue.update(
-            self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
-        )
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
     @router.post("/{plot_queue_id}/pause/")
     def pause_plot_queue(
         self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
     ) -> schemas.PlotQueueReturn:
-        if plot_queue.plot_task_id is not None:
-            task_result = celery_app.AsyncResult(str(plot_queue.plot_task_id))
-            task_result.revoke(terminate=True)
-        plot_queue = crud.plot_queue.update(
-            self.db,
-            db_obj=plot_queue,
-            obj_in={"status": schemas.PlotQueueStatus.PAUSED.value},
-        )
+        # TODO
         return plot_queue
 
     @router.post("/{plot_queue_id}/restart/")
     def restart_plot_queue(
         self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
     ) -> schemas.PlotQueueReturn:
-        if plot_queue.plot_task_id is None:
-            raise HTTPException(
-                409,
-                detail="For some reason, task has no plot_task_id. "
-                "If this error repeats, it might be a bug.",
-            )
-
-        task_result = celery_app.AsyncResult(str(plot_queue.plot_task_id))
-        if (
-            task_result.state not in ["FAILURE", "REVOKED"]
-            and plot_queue.status != schemas.PlotQueueStatus.PAUSED.value
-        ):
-            raise HTTPException(
-                403,
-                detail="Task for this queue is not failed nor revoked, can not restart",
-            )
-
-        plot_task = tasks.plot_queue_task.delay(plot_queue.id)
-        plot_queue = crud.plot_queue.update(
-            self.db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
-        )
+        # TODO
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
     @router.put("/{plot_queue_id}/")
@@ -139,3 +103,30 @@ class PlotQueueCBV(BaseAuthCBV):
             self.db, queue=plot_queue, filtration=filtration
         )
         return schemas.Table[schemas.PlotReturn](amount=amount, items=items)
+
+
+@router.websocket("/ws/")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    uuid: UUID,
+    # user: models.User = Depends(deps.get_current_user),
+) -> None:
+    await websocket.accept()
+    with session_manager(DatabaseSession) as db:
+        plot_queue = crud.plot_queue.get(db, id=uuid)
+        if plot_queue is None:
+            return await websocket.send_json({"error": "No plot queue with such id"})
+
+        if plot_queue.execution_id is None:
+            return await websocket.send_json(
+                {"error": "No execution is bound to a queue"}
+            )
+
+        uri = (
+            f"ws://{plot_queue.server.hostname}/plotting/ws/"
+            f"?execution_id={plot_queue.execution_id}"
+        )
+
+    async with websockets.connect(uri) as proxy_websocket:
+        while True:
+            await websocket.send_json(await proxy_websocket.recv())
