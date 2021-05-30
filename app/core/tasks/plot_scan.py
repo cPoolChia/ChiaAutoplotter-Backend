@@ -15,123 +15,126 @@ from app.db.session import DatabaseSession, session_manager
 
 
 @celery_app.task(bind=True)
-def scan_plotting(
+def scan_plots_task(
     self: celery.Task,
-    plot_queue_id: UUID,
     *,
     session_factory: Callable[[], Session] = DatabaseSession,
 ) -> Any:
-    log_collector = ConsoleLogCollector()
     with session_manager(session_factory) as db:
-        plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
-        if plot_queue is None:
-            raise ValueError(f"Can not find a plot queue with id {plot_queue_id}")
+        plot_queue_ids = [
+            plot_queue.id for plot_queue in crud.plot_queue.get_multi(db)[1]
+        ]
+    log_collector = ConsoleLogCollector()
 
-        plot_location = os.path.join(
-            f"{plot_queue.temp_dir.location}", f"{plot_queue.id}"
-        )
-        created_location = os.path.join(
-            f"{plot_queue.final_dir.location}", f"{plot_queue.id}"
-        )
-        server_data = schemas.ServerReturn.from_orm(plot_queue.server)
-
-        if plot_queue.scan_task_id is not None:
-            task = celery_app.AsyncResult(str(plot_queue.scan_task_id))
-            task.forget()
-
-        # Check how queue task is doing, and if it is failed, mark queue as failed
-        if plot_queue.plot_task_id is not None:
-            task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
-            if (
-                task.status == "FAILURE"
-                and plot_queue.status != schemas.PlotQueueStatus.FAILED.value
-            ):
-                plot_queue = crud.plot_queue.update(
-                    db,
-                    db_obj=plot_queue,
-                    obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
-                )
-
-    connection = console.ConnectionManager(
-        server_data, self, log_collector=log_collector
-    )
-
-    with connection:
-        # Check queue plot directory
-        unique_plots = {
-            ".".join(plot_file.split(".")[:2])
-            for plot_file in connection.command.ls(cd=plot_location)
-            if ".plot." in plot_file
-        }
+    for plot_queue_id in plot_queue_ids:
         with session_manager(session_factory) as db:
-            for plot_name in unique_plots:
-                plot = crud.plot.get_by_name(db, name=plot_name)
-                if plot is None:
-                    crud.plot.create(
-                        db,
-                        obj_in=schemas.PlotCreate(
-                            name=plot_name,
-                            created_queue_id=plot_queue.id,
-                            located_directory_id=plot_queue.temp_dir_id,
-                            status=schemas.PlotStatus.PLOTTING,
-                        ),
-                    )
+            plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
+            if plot_queue is None:
+                raise ValueError(f"Can not find a plot queue with id {plot_queue_id}")
 
-        # Check queue create directory
-        created_files = {
-            plot
-            for plot in connection.command.ls(cd=created_location)
-            if plot.endswith(".plot")
-        }
-        with session_manager(session_factory) as db:
-            for plot_name in created_files:
-                plot = crud.plot.get_by_name(db, name=plot_name)
-                if plot is None:
-                    crud.plot.create(
-                        db,
-                        obj_in=schemas.PlotCreate(
-                            name=plot_name,
-                            created_queue_id=plot_queue.id,
-                            located_directory_id=plot_queue.final_dir_id,
-                            status=schemas.PlotStatus.PLOTTED,
-                        ),
-                    )
-                elif plot.status != schemas.PlotStatus.PLOTTED.value:
-                    plotting_duration = (
-                        plot.created_queue.plotting_started - datetime.utcnow()
-                        if plot.created_queue.plotting_started is not None
-                        else None
-                    )
-                    crud.plot.update(
-                        db,
-                        db_obj=plot,
-                        obj_in={
-                            "status": schemas.PlotStatus.PLOTTED.value,
-                            "located_directory_id": plot_queue.final_dir_id,
-                            "plotting_duration": plotting_duration,
-                        },
-                    )
+            plot_location = os.path.join(
+                f"{plot_queue.temp_dir.location}", f"{plot_queue.id}"
+            )
+            created_location = os.path.join(
+                f"{plot_queue.final_dir.location}", f"{plot_queue.id}"
+            )
+            server_data = schemas.ServerReturn.from_orm(plot_queue.server)
 
-        # If some plots were not found, mark them as lost
-        found_plots = unique_plots | created_files
-        with session_manager(session_factory) as db:
-            queue_plots = crud.plot.get_multi_by_queue(db, queue=plot_queue)[1]
-            for plot in queue_plots:
+            if plot_queue.scan_task_id is not None:
+                task = celery_app.AsyncResult(str(plot_queue.scan_task_id))
+                task.forget()
+
+            # Check how queue task is doing, and if it is failed, mark queue as failed
+            if plot_queue.plot_task_id is not None:
+                task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
                 if (
-                    plot.status
-                    in [
-                        schemas.PlotStatus.PLOTTED.value,
-                        schemas.PlotStatus.PLOTTING.value,
-                        schemas.PlotStatus.PENDING.value,
-                    ]
-                    and plot.name not in found_plots
+                    task.status == "FAILURE"
+                    and plot_queue.status != schemas.PlotQueueStatus.FAILED.value
                 ):
-                    crud.plot.update(
+                    plot_queue = crud.plot_queue.update(
                         db,
-                        db_obj=plot,
-                        obj_in={"status": schemas.PlotStatus.LOST.value},
+                        db_obj=plot_queue,
+                        obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
                     )
 
-    if connection.failed_data is None:
-        return {"info": "done", "console": log_collector.get()}
-    return connection.failed_data
+        connection = console.ConnectionManager(
+            server_data, self, log_collector=log_collector
+        )
+
+        with connection:
+            # Check queue plot directory
+            unique_plots = {
+                ".".join(plot_file.split(".")[:2])
+                for plot_file in connection.command.ls(cd=plot_location)
+                if ".plot." in plot_file
+            }
+            with session_manager(session_factory) as db:
+                for plot_name in unique_plots:
+                    plot = crud.plot.get_by_name(db, name=plot_name)
+                    if plot is None:
+                        crud.plot.create(
+                            db,
+                            obj_in=schemas.PlotCreate(
+                                name=plot_name,
+                                created_queue_id=plot_queue.id,
+                                located_directory_id=plot_queue.temp_dir_id,
+                                status=schemas.PlotStatus.PLOTTING,
+                            ),
+                        )
+
+            # Check queue create directory
+            created_files = {
+                plot
+                for plot in connection.command.ls(cd=created_location)
+                if plot.endswith(".plot")
+            }
+            with session_manager(session_factory) as db:
+                for plot_name in created_files:
+                    plot = crud.plot.get_by_name(db, name=plot_name)
+                    if plot is None:
+                        crud.plot.create(
+                            db,
+                            obj_in=schemas.PlotCreate(
+                                name=plot_name,
+                                created_queue_id=plot_queue.id,
+                                located_directory_id=plot_queue.final_dir_id,
+                                status=schemas.PlotStatus.PLOTTED,
+                            ),
+                        )
+                    elif plot.status != schemas.PlotStatus.PLOTTED.value:
+                        plotting_duration = (
+                            plot.created_queue.plotting_started - datetime.utcnow()
+                            if plot.created_queue.plotting_started is not None
+                            else None
+                        )
+                        crud.plot.update(
+                            db,
+                            db_obj=plot,
+                            obj_in={
+                                "status": schemas.PlotStatus.PLOTTED.value,
+                                "located_directory_id": plot_queue.final_dir_id,
+                                "plotting_duration": plotting_duration,
+                            },
+                        )
+
+            # If some plots were not found, mark them as lost
+            found_plots = unique_plots | created_files
+            with session_manager(session_factory) as db:
+                queue_plots = crud.plot.get_multi_by_queue(db, queue=plot_queue)[1]
+                for plot in queue_plots:
+                    if (
+                        plot.status
+                        in [
+                            schemas.PlotStatus.PLOTTED.value,
+                            schemas.PlotStatus.PLOTTING.value,
+                            schemas.PlotStatus.PENDING.value,
+                        ]
+                        and plot.name not in found_plots
+                    ):
+                        crud.plot.update(
+                            db,
+                            db_obj=plot,
+                            obj_in={"status": schemas.PlotStatus.LOST.value},
+                        )
+
+    return {"info": "done", "console": log_collector.get()}

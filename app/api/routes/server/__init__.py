@@ -27,15 +27,6 @@ router.include_router(
 )
 
 
-@router.on_event("startup")
-@repeat_every(seconds=60, raise_exceptions=True)
-def scan_servers_connection() -> None:
-    db = DatabaseSession()
-    for server in crud.server.get_multi(db)[1]:
-        tasks.init_server_connect.delay(server.id)
-    db.close()
-
-
 @cbv(router)
 class ServerCBV(BaseAuthCBV):
     @router.get("/")
@@ -67,7 +58,7 @@ class ServerCBV(BaseAuthCBV):
             raise HTTPException(403, detail="Server with such hostname already exists")
 
         server = crud.server.create(self.db, obj_in=schemas.ServerCreate(**data.dict()))
-        init_task: celery.AsyncResult = tasks.init_server_connect.apply_async(
+        init_task: celery.AsyncResult = tasks.server_connect_task.apply_async(
             (server.id,), eta=datetime.now() + timedelta(seconds=5)
         )
         server = crud.server.update(
@@ -95,7 +86,7 @@ class ServerCBV(BaseAuthCBV):
 
         server = crud.server.update(self.db, db_obj=server, obj_in=data)
 
-        init_task: celery.AsyncResult = tasks.init_server_connect.apply_async(
+        init_task: celery.AsyncResult = tasks.server_connect_task.apply_async(
             (server.id,), eta=datetime.now() + timedelta(seconds=15)
         )
         server.init_task_id = init_task.id
