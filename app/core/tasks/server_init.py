@@ -84,10 +84,13 @@ def server_connect_task(
             )
 
             if not login_responce.ok:
+                uri = f"http://{host}:{worker_port}/user/"
+                log_collector.update_log(command=f"Registering on {uri}")
                 register_request = requests.post(
                     f"http://{host}:{worker_port}/user/",
                     json={"nickname": "admin", "password": worker_password},
                 )
+                log_collector.update_log(stdout=register_request.content)
                 if not register_request.ok:
                     with session_manager(session_factory) as db:
                         server = crud.server.get(db, id=server_id)
