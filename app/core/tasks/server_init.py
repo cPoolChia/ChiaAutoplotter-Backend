@@ -25,6 +25,11 @@ def init_server_connect(
             raise RuntimeError(
                 f"Can not find a server data with id {server_id} in a database"
             )
+
+        if server.init_task_id is not None:
+            task = celery_app.AsyncResult(str(server.init_task_id))
+            task.forget()
+
         server = crud.server.update(
             db, db_obj=server, obj_in={"init_task_id": self.request.id}
         )

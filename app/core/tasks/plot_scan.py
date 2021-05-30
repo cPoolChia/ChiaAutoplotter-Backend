@@ -35,17 +35,22 @@ def scan_plotting(
         )
         server_data = schemas.ServerReturn.from_orm(plot_queue.server)
 
+        if plot_queue.scan_task_id is not None:
+            task = celery_app.AsyncResult(str(plot_queue.scan_task_id))
+            task.forget()
+
         # Check how queue task is doing, and if it is failed, mark queue as failed
-        task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
-        if (
-            task.status == "FAILURE"
-            and plot_queue.status != schemas.PlotQueueStatus.FAILED.value
-        ):
-            plot_queue = crud.plot_queue.update(
-                db,
-                db_obj=plot_queue,
-                obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
-            )
+        if plot_queue.plot_task_id is not None:
+            task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
+            if (
+                task.status == "FAILURE"
+                and plot_queue.status != schemas.PlotQueueStatus.FAILED.value
+            ):
+                plot_queue = crud.plot_queue.update(
+                    db,
+                    db_obj=plot_queue,
+                    obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
+                )
 
     connection = console.ConnectionManager(
         server_data, self, log_collector=log_collector

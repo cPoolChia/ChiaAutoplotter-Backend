@@ -29,12 +29,18 @@ def plot_queue_task(
             raise RuntimeError(
                 f"Can not find a plot queue with id {plot_queue_id} in a database"
             )
+
+        if plot_queue.plot_task_id is not None:
+            task = celery_app.AsyncResult(str(plot_queue.plot_task_id))
+            task.forget()
+
         plot_queue = crud.plot_queue.update(
             db,
             db_obj=plot_queue,
             obj_in={
                 "status": schemas.PlotQueueStatus.PLOTTING.value,
                 "plotting_started": datetime.utcnow(),
+                "plot_task_id": self.request.id,
             },
         )
         server_data = schemas.ServerReturn.from_orm(plot_queue.server)
@@ -100,9 +106,6 @@ def plot_queue_task(
                 if plot_queue.autoplot:
                     plot_task: celery.AsyncResult = plot_queue_task.apply_async(
                         (plot_queue_id,), eta=datetime.now() + timedelta(minutes=2)
-                    )
-                    plot_queue = crud.plot_queue.update(
-                        db, db_obj=plot_queue, obj_in={"plot_task_id": plot_task.id}
                     )
                 else:
                     plot_queue = crud.plot_queue.update(
