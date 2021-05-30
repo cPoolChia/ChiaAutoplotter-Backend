@@ -12,7 +12,8 @@ class WorkerStartCommand(BaseCommand[None]):
             "sudo apt install git -y",
             "git clone https://github.com/cPoolChia/ChiaAutoplotter-Worker.git",
             "sudo apt install python3.9",
-            "python3 -m pip install poetry",
+            "python3.9 get-pip.py",
+            "python3.9 -m pip install poetry",
             "poetry install",
         ]
         for command in commands:

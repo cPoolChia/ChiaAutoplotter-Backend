@@ -67,12 +67,12 @@ def server_connect_task(
                     db, db_obj=server, obj_in={"status": "connected"}
                 )
 
-            root_folders = connection.command.ls(dirname="/root")
-            if "chia-blockchain" not in root_folders:
-                connection.command.chia.install()
+            # root_folders = connection.command.ls(dirname="/root")
+            # if "chia-blockchain" not in root_folders:
+            #     connection.command.chia.install()
 
-            if "ChiaAutoplotter-Worker" not in root_folders:
-                connection.command.worker()
+            # if "ChiaAutoplotter-Worker" not in root_folders:
+            #     connection.command.worker()
 
             host = server_data.hostname.split(":")[0]
             worker_password = server.worker_password

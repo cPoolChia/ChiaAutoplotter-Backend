@@ -12,6 +12,7 @@ class ChiaInstallCommand(BaseCommand[None]):
             "sudo apt-get update",
             "sudo apt-get upgrade -y",
             "sudo apt install git -y",
+            "sudo ufw allow 8000/tcp",
             "git clone https://github.com/Chia-Network/chia-blockchain.git "
             "-b latest --recurse-submodules",
         ]

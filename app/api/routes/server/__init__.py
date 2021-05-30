@@ -58,12 +58,6 @@ class ServerCBV(BaseAuthCBV):
             raise HTTPException(403, detail="Server with such hostname already exists")
 
         server = crud.server.create(self.db, obj_in=schemas.ServerCreate(**data.dict()))
-        init_task: celery.AsyncResult = tasks.server_connect_task.apply_async(
-            (server.id,), eta=datetime.now() + timedelta(seconds=5)
-        )
-        server = crud.server.update(
-            self.db, db_obj=server, obj_in={"init_task_id": init_task.id}
-        )
         server_id = server.id
         for directory in data.directories:
             crud.directory.create(
@@ -85,16 +79,6 @@ class ServerCBV(BaseAuthCBV):
             raise HTTPException(403, detail="Can not edit already connected server")
 
         server = crud.server.update(self.db, db_obj=server, obj_in=data)
-
-        init_task: celery.AsyncResult = tasks.server_connect_task.apply_async(
-            (server.id,), eta=datetime.now() + timedelta(seconds=15)
-        )
-        server.init_task_id = init_task.id
-
-        server = crud.server.update(
-            self.db, db_obj=server, obj_in={"init_task_id": init_task.id}
-        )
-
         return schemas.ServerReturn.from_orm(server)
 
     @router.delete("/{server_id}/")
