@@ -41,9 +41,7 @@ def plot_queue_task(
 
             server_data = schemas.ServerReturn.from_orm(plot_queue.server)
             final_dir = plot_queue.final_dir.location
-            final_dir_sub = os.path.join(final_dir, f"{plot_queue.id}")
             temp_dir = plot_queue.temp_dir.location
-            temp_dir_sub = os.path.join(temp_dir, f"{plot_queue.id}")
             pool_key = plot_queue.server.pool_key
             farmer_key = plot_queue.server.farmer_key
             plots_amount = plot_queue.plots_amount
@@ -58,8 +56,9 @@ def plot_queue_task(
             worker_password = plot_queue.server.worker_password
             worker_port = plot_queue.server.worker_port
             plotting_data = schemas.PlottingData(
-                final_dir=final_dir_sub,
-                temp_dir=temp_dir_sub,
+                final_dir=final_dir,
+                temp_dir=temp_dir,
+                queue_id=plot_queue_id,
                 pool_key=pool_key,
                 farmer_key=farmer_key,
                 plots_amount=plots_amount,
