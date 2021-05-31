@@ -18,6 +18,7 @@ class ServerStatus(Enum):
 class ServerCreate(APIModel):
     name: str
     hostname: str
+    worker_port: int
     username: str
     password: str
     pool_key: str
@@ -31,6 +32,7 @@ class ServerCreateExtended(ServerCreate):
 class ServerUpdate(APIModel):
     name: Optional[str] = Field()
     hostname: Optional[str] = Field()
+    worker_port: Optional[int] = Field()
     username: Optional[str] = Field()
     password: Optional[str] = Field()
     pool_key: Optional[str] = Field()
@@ -41,6 +43,7 @@ class ServerReturn(APIModel):
     id: UUID
     name: str
     hostname: str
+    worker_port: int
     username: str
     password: str
     pool_key: str

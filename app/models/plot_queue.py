@@ -24,6 +24,10 @@ class PlotQueue(Base):
     temp_dir = relationship("Directory", foreign_keys=[temp_dir_id])
 
     plots_amount = Column(Integer, nullable=False)
+    k = Column(Integer, nullable=False)
+    threads = Column(Integer, nullable=False)
+    ram = Column(Integer, nullable=False)
+    
     autoplot = Column(Boolean, nullable=False, default=True)
     plotting_started = Column(DATETIME(fsp=6), default=None, nullable=True)
 

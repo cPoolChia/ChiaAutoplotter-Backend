@@ -21,6 +21,9 @@ class PlotQueueCreate(APIModel):
     final_dir_id: UUID
     autoplot: bool = True
     plots_amount: int
+    k: int = 32
+    threads: int = 2
+    ram: int = 4608
 
 
 class PlottingData(APIModel):
@@ -45,6 +48,9 @@ class PlotQueueUpdate(APIModel):
     final_dir_id: Optional[UUID] = None
     plots_amount: Optional[int] = None
     autoplot: Optional[bool] = None
+    k: Optional[int] = None
+    threads: Optional[int] = None
+    ram: Optional[int] = None
 
 
 class PlotQueueReturn(APIModel):
@@ -55,5 +61,8 @@ class PlotQueueReturn(APIModel):
     plotting_started: Optional[datetime]
     autoplot: bool
     plots_amount: int
+    k: int
+    threads: int
+    ram: int
     created: datetime
     status: PlotQueueStatus

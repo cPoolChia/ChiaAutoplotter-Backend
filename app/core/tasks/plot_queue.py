@@ -47,6 +47,9 @@ def plot_queue_task(
             pool_key = plot_queue.server.pool_key
             farmer_key = plot_queue.server.farmer_key
             plots_amount = plot_queue.plots_amount
+            k = plot_queue.k
+            threads = plot_queue.threads
+            ram = plot_queue.ram
 
             execution_id = plot_queue.execution_id
             autoplot = plot_queue.autoplot
@@ -60,9 +63,9 @@ def plot_queue_task(
                 pool_key=pool_key,
                 farmer_key=farmer_key,
                 plots_amount=plots_amount,
-                k=32,
-                threads=2,
-                ram=4608,
+                k=k,
+                threads=threads,
+                ram=ram,
             )
 
         login_responce = requests.post(
