@@ -7,7 +7,7 @@ import celery
 import time
 import os.path
 from uuid import UUID
-
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.sql import schema
 from app import models, schemas, crud
 from app.core import console
@@ -58,7 +58,7 @@ def plot_queue_task(
             plotting_data = schemas.PlottingData(
                 final_dir=final_dir,
                 temp_dir=temp_dir,
-                queue_id=str(plot_queue_id),
+                queue_id=plot_queue_id,
                 pool_key=pool_key,
                 farmer_key=farmer_key,
                 plots_amount=plots_amount,
@@ -85,7 +85,7 @@ def plot_queue_task(
                 responce = requests.post(
                     f"http://{host}:{worker_port}/plotting/",
                     headers=auth_headers,
-                    json=plotting_data.dict(),
+                    json=jsonable_encoder(plotting_data),
                 )
                 log_collector.update_log(
                     stdout=f"\nPOST {responce.url}\n".encode("utf8")
