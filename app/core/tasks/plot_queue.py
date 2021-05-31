@@ -58,7 +58,7 @@ def plot_queue_task(
             plotting_data = schemas.PlottingData(
                 final_dir=final_dir,
                 temp_dir=temp_dir,
-                queue_id=plot_queue_id,
+                queue_id=str(plot_queue_id),
                 pool_key=pool_key,
                 farmer_key=farmer_key,
                 plots_amount=plots_amount,
