@@ -7,6 +7,7 @@ import warnings
 class ConsoleLogCollector:
     def __init__(self) -> None:
         self._data: list[schemas.ConsoleLog] = []
+        self._data.append(schemas.ConsoleLog(command="Starting task execution..."))
 
     def __enter__(self) -> None:
         self._data.append(schemas.ConsoleLog())

@@ -49,7 +49,6 @@ class PlotQueueUpdate(APIModel):
 
 class PlotQueueReturn(APIModel):
     id: UUID
-    execution_id: Optional[UUID]
     server_id: UUID
     temp_dir_id: UUID
     final_dir_id: UUID

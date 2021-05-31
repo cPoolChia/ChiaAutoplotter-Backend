@@ -43,6 +43,7 @@ class ConnectionManager:
 
     def set_failed(self, **value: Any) -> None:
         self._failed_data = value
+        self.log_collector.update_log(stdout=value.get("info", "").encode("utf8"))
         self._task.send_event("task-failed", data=self._failed_data)
 
     def _callback_failed(self) -> None:

@@ -69,6 +69,8 @@ def plot_queue_task(
             f"http://{host}:{worker_port}/login/access-token/",
             data={"username": "admin", "password": worker_password},
         )
+        log_collector.update_log(stdout=f"\nPOST {login_responce.url}\n".encode("utf8"))
+        log_collector.update_log(stdout=login_responce.content)
 
         if not login_responce.ok:
             continue
@@ -79,13 +81,17 @@ def plot_queue_task(
         if execution_id is None:
             if autoplot or plotting_started is None:
                 responce = requests.post(
-                    f"http://{host}/plotting/",
+                    f"http://{host}:{worker_port}/plotting/",
                     headers=auth_headers,
                     json=plotting_data.dict(),
                 )
+                log_collector.update_log(
+                    stdout=f"\nPOST {responce.url}\n".encode("utf8")
+                )
+                log_collector.update_log(stdout=responce.content)
                 with session_manager(session_factory) as db:
                     plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
-                    if responce.ok:
+                    if not responce.ok:
                         crud.plot_queue.update(
                             db,
                             db_obj=plot_queue,
@@ -104,8 +110,11 @@ def plot_queue_task(
                         )
         else:
             responce = requests.get(
-                f"http://{host}/plotting/{execution_id}/", headers=auth_headers
+                f"http://{host}:{worker_port}/plotting/{execution_id}/",
+                headers=auth_headers,
             )
+            log_collector.update_log(stdout=f"\nGET {responce.url}\n".encode("utf8"))
+            log_collector.update_log(stdout=responce.content)
             with session_manager(session_factory) as db:
                 plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
                 if not responce.ok:

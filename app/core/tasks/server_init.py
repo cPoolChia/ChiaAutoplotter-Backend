@@ -82,13 +82,19 @@ def server_connect_task(
                 f"http://{host}:{worker_port}/login/access-token/",
                 data={"username": "admin", "password": worker_password},
             )
+            log_collector.update_log(
+                stdout=f"\nPOST {login_responce.url}\n".encode("utf8")
+            )
+            log_collector.update_log(stdout=login_responce.content)
 
             if not login_responce.ok:
                 uri = f"http://{host}:{worker_port}/user/"
-                log_collector.update_log(command=f"Registering on {uri}")
                 register_request = requests.post(
                     f"http://{host}:{worker_port}/user/",
                     json={"nickname": "admin", "password": worker_password},
+                )
+                log_collector.update_log(
+                    stdout=f"\nPOST {register_request.url}\n".encode("utf8")
                 )
                 log_collector.update_log(stdout=register_request.content)
                 if not register_request.ok:
