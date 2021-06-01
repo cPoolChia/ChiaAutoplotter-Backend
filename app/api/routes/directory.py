@@ -16,17 +16,32 @@ from fastapi_utils.inferring_router import InferringRouter
 from app.api.routes.base import BaseAuthCBV
 
 router = InferringRouter()
+router_for_id = InferringRouter()
+router.include_router(router_for_id, prefix="/{directory_id}")
 
 
 @cbv(router)
 class DirectoryCBV(BaseAuthCBV):
+    @router.get("/")
+    def get_directories_table(
+        self,
+        filtration: schemas.FilterData[models.Directory] = Depends(
+            deps.get_filtration_data(models.Directory)
+        ),
+    ) -> schemas.Table[schemas.DirectoryReturn]:
+        amount, items = crud.directory.get_multi(self.db, filtration=filtration)
+        return schemas.Table[schemas.DirectoryReturn](amount=amount, items=items)
+
+
+@cbv(router_for_id)
+class DirectoryFromIDCBV(BaseAuthCBV):
     directory: models.Directory = Depends(deps.get_directory_by_id)
 
-    @router.get("/")
+    @router_for_id.get("/")
     def get_directory_data(self) -> schemas.DirectoryReturn:
         return schemas.DirectoryReturn.from_orm(self.directory)
 
-    @router.get("/plots/")
+    @router_for_id.get("/plots/")
     def get_plots_in_directory(
         self,
         filtration: schemas.FilterData[models.Plot] = Depends(
@@ -38,7 +53,7 @@ class DirectoryCBV(BaseAuthCBV):
         )
         return schemas.Table[schemas.PlotReturn](amount=amount, items=items)
 
-    @router.get("/queues/")
+    @router_for_id.get("/queues/")
     def get_queues_linked_to_directory(
         self,
         filtration: schemas.FilterData[models.PlotQueue] = Depends(
@@ -50,7 +65,7 @@ class DirectoryCBV(BaseAuthCBV):
         )
         return schemas.Table[schemas.PlotQueueReturn](amount=amount, items=items)
 
-    @router.delete("/")
+    @router_for_id.delete("/")
     def remove_directory(self) -> schemas.Msg:
         linked_queues_amount, _ = crud.plot_queue.get_multi_linked_to_directory(
             self.db, directory=self.directory
