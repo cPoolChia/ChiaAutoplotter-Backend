@@ -128,7 +128,9 @@ def plot_queue_task(
                 else:
                     plotting_data = schemas.PlottingReturn(**responce.json())
                     if plotting_data.finished:
-                        if plotting_data.status_code == 0:
+                        # NOTE for some reason chia plot create command exits
+                        # with -1 of success (except 0)
+                        if plotting_data.status_code == -1:
                             crud.plot_queue.update(
                                 db,
                                 db_obj=plot_queue,
