@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 import uuid
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 from fastapi_utils.guid_type import GUID
@@ -25,5 +25,5 @@ class Plot(Base):
     located_directory = relationship(
         "Directory", foreign_keys=[located_directory_id], back_populates="plots"
     )
-    plotting_duration = Column(DATETIME(fsp=6), nullable=True, default=None)
+    plotting_duration = Column(Interval, nullable=True, default=None)
     status = Column(String(40), nullable=False, default="pending")
