@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 from pydantic import BaseModel
 
 from enum import Enum
@@ -35,5 +35,5 @@ class PlotReturn(APIModel):
     created_queue_id: Optional[UUID]
     located_directory_id: UUID
     created: datetime
-    plotting_duration: Optional[datetime]
+    plotting_duration: Optional[timedelta]
     status: PlotStatus
