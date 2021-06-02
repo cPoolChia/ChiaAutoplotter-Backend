@@ -9,6 +9,7 @@ from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from functools import cache
 
 from app import crud, models, schemas
 from app.core import security
@@ -20,12 +21,14 @@ from app.celery import celery as celery_app
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"/login/access-token")
 
 
+@cache
 def get_events_listener() -> listeners.TaskEventsListener:
     celery_events_listener = listeners.TaskEventsListener(celery_app)
     celery_events_listener.start_threaded()
     return celery_events_listener
 
 
+@cache
 def get_object_update_listener() -> listeners.ObjectUpdateListener:
     listener = listeners.ObjectUpdateListener()
     crud.CRUDBase.set_object_listener(listener)
