@@ -131,4 +131,7 @@ async def websocket_endpoint(
 
     async with websockets.connect(uri) as proxy_websocket:
         while True:
-            await websocket.send_json(await proxy_websocket.recv())
+            data = await proxy_websocket.recv()
+            if isinstance(data, bytes):
+                data = data.decode("utf-8")
+            await websocket.send_text(data)
