@@ -89,8 +89,8 @@ def get_current_user(
 def get_filtration_data(_T: Optional[Type[Base]] = None) -> Callable:
     def dependancy(
         *,
-        limit: int = 100,
-        offset: int = 0,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
         sort: Optional[str] = None,
         request: Request,
     ) -> schemas.FilterData[_T]:
