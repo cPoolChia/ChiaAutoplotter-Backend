@@ -63,7 +63,12 @@ class PlotQueueCBV(BaseAuthCBV):
     def restart_plot_queue(
         self, plot_queue: models.PlotQueue = Depends(deps.get_plot_queue_by_id)
     ) -> schemas.PlotQueueReturn:
-        # TODO
+        if plot_queue.status != schemas.PlotQueueStatus.FAILED.value:
+            raise HTTPException(403, detail="Plot queue is not failed to restart.")
+
+        plot_queue = crud.plot_queue.update(
+            self.db, db_obj=plot_queue, obj_in={"execution_id": None}
+        )
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
     @router.put("/{plot_queue_id}/")
