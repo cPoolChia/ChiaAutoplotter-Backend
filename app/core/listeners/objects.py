@@ -1,8 +1,9 @@
 import threading
+import uuid
 from app import db
 from app.core.config import settings
 from pydantic import BaseModel
-from typing import Any, Type
+from typing import Any, Type, TypedDict, no_type_check
 from fastapi.encoders import jsonable_encoder
 
 from .base import BaseListener
@@ -16,10 +17,22 @@ task_exchange = Exchange("tasks", type="direct")
 task_queues = [Queue("default", task_exchange, routing_key="default")]
 
 
+class ContentData(TypedDict):
+    table: str
+    type: str
+    obj: Any
+
+
+class ContentBody(TypedDict):
+    id: uuid.UUID
+    data: ContentData
+
+
 class ObjectUpdateListener(BaseListener, ConsumerMixin):
     def __init__(self) -> None:
         super().__init__()
         self.connection = Connection(settings.CELERY_BROKER)
+        self.__processed_updates: set[uuid.UUID] = set()
 
     def __del__(self) -> None:
         self.connection.close()
@@ -29,6 +42,7 @@ class ObjectUpdateListener(BaseListener, ConsumerMixin):
         self._thread.setDaemon(True)
         self._thread.start()
 
+    @no_type_check
     def get_consumers(self, Consumer, channel):
         return [
             Consumer(
@@ -38,10 +52,16 @@ class ObjectUpdateListener(BaseListener, ConsumerMixin):
             )
         ]
 
-    def process_task(self, body, message):
+    def notify_subscribers(self, data: ContentData) -> None:
         for websocket, loop in self._connections_unfiltered.values():
-            loop.create_task(websocket.send_json(body))
-        message.ack()
+            loop.create_task(websocket.send_json(data))
+
+    def process_task(self, body: ContentBody, message: Any = None) -> None:
+        if body["id"] not in self.__processed_updates:
+            self.notify_subscribers(body["data"])
+            self.__processed_updates.add(body["id"])
+        if hasattr(message, "ack"):
+            message.ack()
 
     def send_as_task(self, connection, payload: Any) -> None:
         with producers[connection].acquire(block=True) as producer:
@@ -59,9 +79,13 @@ class ObjectUpdateListener(BaseListener, ConsumerMixin):
     ) -> None:
         content = jsonable_encoder(
             {
-                "table": db_obj.__tablename__,
-                "type": change_type,
-                "obj": schema.from_orm(db_obj),  # type: ignore
+                "id": uuid.uuid4(),
+                "data": {
+                    "table": db_obj.__tablename__,
+                    "type": change_type,
+                    "obj": schema.from_orm(db_obj),  # type: ignore
+                },
             }
         )
         self.send_as_task(self.connection, content)
+        self.process_task(content)

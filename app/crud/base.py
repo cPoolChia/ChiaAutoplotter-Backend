@@ -47,7 +47,7 @@ class CRUDBase(
     def notify_change(
         self,
         db_obj: ModelType,
-        change_type: Union[Literal["update"], Literal["delete"]],
+        change_type: Union[Literal["create"], Literal["update"], Literal["delete"]],
     ) -> None:
         if self._listener is not None:
             self._listener.notify_change(db_obj, self.return_schema, change_type)
@@ -105,7 +105,7 @@ class CRUDBase(
         if commit:
             db.commit()
             db.refresh(db_obj)
-            self.notify_change(db_obj, "update")
+            self.notify_change(db_obj, "create")
         return db_obj
 
     def update(
