@@ -1,6 +1,7 @@
 ![Python](https://img.shields.io/badge/-Python-000000?style=for-the-badge&logo=Python)
 ![Docker](https://img.shields.io/badge/-Docker-000000?style=for-the-badge&logo=Docker)
-![Jenkins](https://img.shields.io/badge/-Jenkins-000000?style=for-the-badge&logo=Jenkins)
+![FastAPI](https://img.shields.io/badge/-FastAPI-000000?style=for-the-badge&logo=FastAPI)
+![Black](https://img.shields.io/badge/-Black-000000?style=for-the-badge&logo=Black)
 
 # FastAPI Celery SQLAlchemy Boilerplate
 
