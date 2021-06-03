@@ -122,7 +122,7 @@ async def websocket_endpoint(
                 {"error": "No execution is bound to a queue"}
             )
 
-        host = plot_queue.server.hostname
+        host = plot_queue.server.hostname.split(":")[0]
         port = plot_queue.server.worker_port
         uri = (
             f"ws://{host}:{port}/plotting/ws/"
