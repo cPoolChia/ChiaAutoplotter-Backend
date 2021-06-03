@@ -120,11 +120,21 @@ def plot_queue_task(
             with session_manager(session_factory) as db:
                 plot_queue = crud.plot_queue.get(db, id=plot_queue_id)
                 if not responce.ok:
-                    crud.plot_queue.update(
-                        db,
-                        db_obj=plot_queue,
-                        obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
-                    )
+                    if responce.status_code == 404:
+                        crud.plot_queue.update(
+                            db,
+                            db_obj=plot_queue,
+                            obj_in={
+                                "status": schemas.PlotQueueStatus.FAILED.value,
+                                "execution_id": None,
+                            },
+                        )
+                    else:
+                        crud.plot_queue.update(
+                            db,
+                            db_obj=plot_queue,
+                            obj_in={"status": schemas.PlotQueueStatus.FAILED.value},
+                        )
                 else:
                     plotting_data = schemas.PlottingReturn(**responce.json())
                     if plotting_data.finished:
