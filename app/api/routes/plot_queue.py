@@ -67,7 +67,12 @@ class PlotQueueCBV(BaseAuthCBV):
             raise HTTPException(403, detail="Plot queue is not failed to restart.")
 
         plot_queue = crud.plot_queue.update(
-            self.db, db_obj=plot_queue, obj_in={"execution_id": None}
+            self.db,
+            db_obj=plot_queue,
+            obj_in={
+                "execution_id": None,
+                "status": schemas.PlotQueueStatus.PENDING.value,
+            },
         )
         return schemas.PlotQueueReturn.from_orm(plot_queue)
 
