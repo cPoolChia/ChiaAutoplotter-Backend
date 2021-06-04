@@ -87,6 +87,35 @@ def server_connect_task(
             )
             log_collector.update_log(stdout=login_responce.content)
 
+            metadata_responce = requests.get(
+                f"http://{host}:{worker_port}/metadata/",
+                data={"username": "admin", "password": worker_password},
+            )
+            log_collector.update_log(
+                stdout=f"\nGET {metadata_responce.url}\n".encode("utf8")
+            )
+            log_collector.update_log(stdout=metadata_responce.content)
+
+            with session_manager(session_factory) as db:
+                server = crud.server.get(db, id=server_id)
+                if server is None:
+                    raise RuntimeError(f"Server with id {server_id} has gone away")
+
+                if metadata_responce.status_code == 404:
+                    server = crud.server.update(
+                        db, db_obj=server, obj_in={"worker_version": "< 0.1.0"}
+                    )
+                elif metadata_responce.status_code == 200:
+                    server = crud.server.update(
+                        db,
+                        db_obj=server,
+                        obj_in={"worker_version": metadata_responce.json()["version"]},
+                    )
+                else:
+                    server = crud.server.update(
+                        db, db_obj=server, obj_in={"worker_version": "undefined"}
+                    )
+
             if not login_responce.ok:
                 uri = f"http://{host}:{worker_port}/user/"
                 register_request = requests.post(

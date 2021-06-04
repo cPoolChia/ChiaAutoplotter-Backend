@@ -34,5 +34,6 @@ class Server(Base):
         String(18), nullable=False, default=lambda: generate_random_password(18)
     )
     worker_port = Column(Integer, nullable=False, default=8000)
+    worker_version = Column(String(40), nullable=False, default="pending")
     status = Column(String(40), default="pending")
     directories = relationship("Directory", uselist=True, back_populates="server")

@@ -44,6 +44,7 @@ class ServerReturn(APIModel):
     name: str
     hostname: str
     worker_port: int
+    worker_version: str
     username: str
     password: str
     pool_key: str
