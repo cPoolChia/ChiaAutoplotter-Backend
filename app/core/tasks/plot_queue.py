@@ -67,12 +67,21 @@ def plot_queue_task(
                 ram=ram,
             )
 
-        login_responce = requests.post(
-            f"http://{host}:{worker_port}/login/access-token/",
-            data={"username": "admin", "password": worker_password},
-        )
-        log_collector.update_log(stdout=f"\nPOST {login_responce.url}\n".encode("utf8"))
-        log_collector.update_log(stdout=login_responce.content)
+        try:
+            login_responce = requests.post(
+                f"http://{host}:{worker_port}/login/access-token/",
+                data={"username": "admin", "password": worker_password},
+            )
+        except requests.exceptions.ConnectionError:
+            log_collector.update_log(
+                stdout=f"\n Can not connect to {login_responce.url} \n".encode("utf8")
+            )
+            continue
+        else:
+            log_collector.update_log(
+                stdout=f"\nPOST {login_responce.url}\n".encode("utf8")
+            )
+            log_collector.update_log(stdout=login_responce.content)
 
         if not login_responce.ok:
             continue
