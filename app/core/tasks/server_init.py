@@ -58,6 +58,9 @@ def server_connect_task(
             server_data, self, on_failed=on_failed, log_collector=log_collector
         )
 
+        if not connection.available():
+            continue
+
         with connection:
             with session_manager(session_factory) as db:
                 server = crud.server.get(db, id=server_id)

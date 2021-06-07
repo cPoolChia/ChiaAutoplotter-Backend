@@ -58,6 +58,27 @@ class ConnectionManager:
         if self._on_finished is not None:
             self._on_finished()
 
+    def available(self) -> bool:
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if ":" in self._server.hostname:
+            host, port = self._server.hostname.split(":")[:2]
+        else:
+            host, port = self._server.hostname, "22"
+        try:
+            ssh_client.connect(
+                hostname=host,
+                port=int(port),
+                username=self._server.username,
+                password=self._server.password,
+            )
+        except:
+            return False
+        else:
+            return True
+        finally:
+            ssh_client.close()
+
     def __enter__(self) -> ConnectionManager:
         self._ssh_client = paramiko.SSHClient()
         self._ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

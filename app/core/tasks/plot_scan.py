@@ -44,6 +44,9 @@ def scan_plots_task(
             server_data, self, log_collector=log_collector
         )
 
+        if not connection.available():
+            continue
+
         with connection:
             # Check queue plot directory
             unique_plots = {
