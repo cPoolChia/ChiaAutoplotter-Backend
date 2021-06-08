@@ -37,8 +37,8 @@ class TransferCBV(BaseAuthCBV):
         plot = crud.plot.get(self.db, id=data.plot_id)
         if plot is None:
             raise HTTPException(404, "Plot with such id is not found")
-        if plot.status != schemas.PlotStatus.PLOTTED:
-            raise HTTPException(403, "Can only transfer plotted plots")
+        if plot.status in [schemas.PlotStatus.PLOTING, schemas.PlotStatus.PENDING]:
+            raise HTTPException(403, "Can not transfer plotting and pending plots")
         start_dir = plot.located_directory
         dest_dir = crud.directory.get(self.db, id=data.destination_directory_id)
         if dest_dir is None:
