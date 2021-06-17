@@ -139,7 +139,7 @@ def server_ping_task(
 
         directories_request = requests.post(
             f"{uri}/directories/",
-            json=jsonable_encoder(list(directories.values())),
+            json=jsonable_encoder(list(directories.keys())),
             headers=auth_headers,
         )
         log_collector.update_log(
