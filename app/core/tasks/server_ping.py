@@ -154,7 +154,7 @@ def server_ping_task(
 
         dir_data: dict[pathlib.Path, Optional[schemas.DirInfo]] = {
             pathlib.Path(path): res and schemas.DirInfo(**res)
-            for path, res in directories_request.json()
+            for path, res in directories_request.json().items()
         }
 
         with session_manager(session_factory) as db:
