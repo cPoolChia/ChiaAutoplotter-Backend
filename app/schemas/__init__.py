@@ -9,3 +9,4 @@ from .plot import *
 from .plot_queue import *
 from .directory import *
 from .transfer import *
+from .directories import *
