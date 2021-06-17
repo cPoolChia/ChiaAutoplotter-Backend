@@ -142,6 +142,10 @@ def server_ping_task(
             json={"directories": jsonable_encoder(list(directories.values()))},
             headers=auth_headers,
         )
+        log_collector.update_log(
+            stdout=f"\nGET {directories_request.url}\n".encode("utf8")
+        )
+        log_collector.update_log(stdout=directories_request.content)
 
         if not directories_request.ok:
             server = crud.server.get(db, id=server_id)
