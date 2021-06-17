@@ -143,7 +143,7 @@ def server_ping_task(
             headers=auth_headers,
         )
         log_collector.update_log(
-            stdout=f"\nGET {directories_request.url}\n".encode("utf8")
+            stdout=f"\nPOST {directories_request.url}\n".encode("utf8")
         )
         log_collector.update_log(stdout=directories_request.content)
 
