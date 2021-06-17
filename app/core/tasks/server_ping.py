@@ -165,6 +165,7 @@ def server_ping_task(
                         crud.directory.update(
                             db, db_obj=directory, obj_in={"status": "failed"}
                         )
+                continue
 
             for loc, data in dir_data.items():
                 directory = crud.directory.get(db, id=directories[loc.name])
