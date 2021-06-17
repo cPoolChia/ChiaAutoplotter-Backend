@@ -152,12 +152,20 @@ def server_ping_task(
                 obj_in={"worker_version": f"{server.worker_version} (unsupported)"},
             )
 
-        dir_data: dict[pathlib.Path, Optional[schemas.DirInfo]] = {
-            pathlib.Path(path): res and schemas.DirInfo(**res)
-            for path, res in directories_request.json().items()
-        }
-
         with session_manager(session_factory) as db:
+            try:
+                dir_data: dict[pathlib.Path, Optional[schemas.DirInfo]] = {
+                    pathlib.Path(path): res and schemas.DirInfo(**res)
+                    for path, res in directories_request.json().items()
+                }
+            except Exception:
+                for directory_id in directories.values():
+                    directory = crud.directory.get(db, id=directory_id)
+                    if directory is not None:
+                        crud.directory.update(
+                            db, db_obj=directory, obj_in={"status": "failed"}
+                        )
+
             for loc, data in dir_data.items():
                 directory = crud.directory.get(db, id=directories[loc.name])
                 if directory is None:
