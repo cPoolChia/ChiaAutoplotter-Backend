@@ -173,6 +173,9 @@ def server_ping_task(
                 continue
 
             for loc, data in dir_data.items():
+                if loc.name not in directories:
+                    continue
+
                 directory = crud.directory.get(db, id=directories[loc.name])
                 if directory is None:
                     continue
