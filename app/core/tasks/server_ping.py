@@ -140,6 +140,7 @@ def server_ping_task(
         directories_request = requests.post(
             f"{uri}/directories/",
             json={"directories": jsonable_encoder(list(directories.values()))},
+            headers=auth_headers,
         )
 
         if not directories_request.ok:
