@@ -12,6 +12,7 @@ from app import schemas, crud
 from app.celery import celery as celery_app
 from sqlalchemy.orm import Session
 from app.db.session import DatabaseSession, session_manager
+from fastapi.encoders import jsonable_encoder
 
 
 @celery_app.task(bind=True)
@@ -137,7 +138,8 @@ def server_ping_task(
                 )
 
         directories_request = requests.post(
-            f"{uri}/directories/", json={"directories": list(directories.values())}
+            f"{uri}/directories/",
+            json={"directories": jsonable_encoder(list(directories.values()))},
         )
 
         if not directories_request.ok:
