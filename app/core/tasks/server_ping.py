@@ -172,7 +172,10 @@ def server_ping_task(
                         )
                 continue
 
+            log_collector.update_log(stdout=f"\n{directories}".encode("utf8"))
+
             for loc, data in dir_data.items():
+                log_collector.update_log(stdout=f"\n{loc}".encode("utf8"))
                 if loc.name not in directories:
                     continue
 
